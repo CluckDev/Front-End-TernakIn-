@@ -11,6 +11,8 @@ import 'screens/manajemen_kesehatan.dart';
 import 'screens/profile.dart';
 import 'screens/pengaturan_screen.dart';
 import 'screens/notifikasi_screen.dart';
+import 'splash_screen.dart';
+
 // Tambahkan import lain jika ada
 
 // ValueNotifier untuk ThemeMode (untuk pengaturan tema dinamis)
@@ -47,8 +49,9 @@ class MyApp extends StatelessWidget {
         scaffoldBackgroundColor: const Color(0xFF222222),
       ),
       themeMode: themeMode,
-      initialRoute: '/login',
+      initialRoute: '/splash',
       routes: {
+        '/splash': (context) => const SplashScreen(),
         '/login': (context) => const LoginScreen(),
         '/register': (context) => const RegisterScreen(),
         '/dashboard': (context) => const DashboardScreen(),
@@ -61,7 +64,6 @@ class MyApp extends StatelessWidget {
         '/profile': (context) => const ProfilScreen(),
         '/pengaturan': (context) => const PengaturanScreen(),
         '/notifikasi': (context) => const NotifikasiScreen(),
-        // Tambahkan route lain jika ada
       },
     );
   }
