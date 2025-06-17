@@ -1,17 +1,48 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:ternakin/screens/dashboard.dart';
+import 'package:ternakin/services/auth_services.dart';
 import 'edit_profile_screen.dart';
 import 'statistik_screen.dart';
 import 'pengaturan_screen.dart';
 import 'notifikasi_screen.dart';
 
-
-class ProfilScreen extends StatelessWidget {
+class ProfilScreen extends StatefulWidget {
   const ProfilScreen({super.key});
+
+  @override
+  State<ProfilScreen> createState() => _ProfilScreenState();
+}
+
+class _ProfilScreenState extends State<ProfilScreen> {
+  String? errorMessage;
+  void logout() async {
+    try {
+      authService.signOut();
+    } catch (e) {
+      setState(() {
+        errorMessage = e.toString();
+      });
+      return;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('Profil'),
+        backgroundColor: Colors.green,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const DashboardScreen()));
+          },
+        ),
+      ),
       body: ListView(
         padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
         children: [
@@ -64,7 +95,8 @@ class ProfilScreen extends StatelessWidget {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const EditProfilScreen()),
+                MaterialPageRoute(
+                    builder: (context) => const EditProfilScreen()),
               );
             },
           ),
@@ -77,11 +109,12 @@ class ProfilScreen extends StatelessWidget {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const StatistikScreen()),
+                MaterialPageRoute(
+                    builder: (context) => const StatistikScreen()),
               );
             },
           ),
-         _profileMenu(
+          _profileMenu(
             context,
             icon: Icons.settings,
             label: 'Pengaturan',
@@ -89,51 +122,53 @@ class ProfilScreen extends StatelessWidget {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const PengaturanScreen()),
+                MaterialPageRoute(
+                    builder: (context) => const PengaturanScreen()),
               );
             },
           ),
-         _profileMenu(
-          context,
-          icon: Icons.notifications,
-          label: 'Notifikasi',
-          color: Colors.green[400]!,
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const NotifikasiScreen()),
-            );
-          },
-        ),
-         _profileMenu(
-          context,
-          icon: Icons.logout,
-          label: 'Logout',
-          color: Colors.red,
-          onTap: () async {
-          final confirm = await showDialog<bool>(
-            context: context,
-            builder: (context) => AlertDialog(
-              title: const Text('Konfirmasi Logout'),
-              content: const Text('Apakah Anda yakin ingin logout?'),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context, false),
-                  child: const Text('Batal'),
+          _profileMenu(
+            context,
+            icon: Icons.notifications,
+            label: 'Notifikasi',
+            color: Colors.green[400]!,
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const NotifikasiScreen()),
+              );
+            },
+          ),
+          _profileMenu(
+            context,
+            icon: Icons.logout,
+            label: 'Logout',
+            color: Colors.red,
+            onTap: () async {
+              final confirm = await showDialog<bool>(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('Konfirmasi Logout'),
+                  content: const Text('Apakah Anda yakin ingin logout?'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      child: const Text('Batal'),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, true),
+                      child: const Text('Ya'),
+                    ),
+                  ],
                 ),
-                TextButton(
-                  onPressed: () => Navigator.pop(context, true),
-                  child: const Text('Ya'),
-                ),
-              ],
-            ),
-          );
-          if (!context.mounted) return; // <-- Tambahkan ini
-          if (confirm == true) {
-            Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
-          }
-        },
-        ),
+              );
+              if (!context.mounted) return; // <-- Tambahkan ini
+              if (confirm == true) {
+                logout();
+              }
+            },
+          ),
         ],
       ),
     );
@@ -150,11 +185,13 @@ class ProfilScreen extends StatelessWidget {
           leading: Icon(icon, color: color),
           title: Text(
             label,
-            style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.w500),
+            style:
+                GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.w500),
           ),
           trailing: Icon(Icons.chevron_right, color: Colors.grey[400]),
           onTap: onTap,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 0),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 24, vertical: 0),
         ),
         const Divider(height: 0, thickness: 1, indent: 24, endIndent: 24),
       ],
