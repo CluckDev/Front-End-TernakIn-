@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "711073168851",
+    "project_id": "chickdev-639f5",
+    "storage_bucket": "chickdev-639f5.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:711073168851:android:b6f1f7d431a0a7b5aa4326",
+        "android_client_info": {
+          "package_name": "com.example.ternakin"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDy3cQqYk_H9gcQ1__fLo9sos2QQ_cmXN0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
