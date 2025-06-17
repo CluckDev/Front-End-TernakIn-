@@ -43,7 +43,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 color: Colors.white,
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 5),
             Text(
               'Manajemen Peternakan Ayam',
               style: GoogleFonts.poppins(
