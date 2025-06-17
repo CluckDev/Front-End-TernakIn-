@@ -89,7 +89,7 @@ class _LoginScreenState extends State<LoginScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Image.asset(
-                'assets/images/logo.jpg',
+                'assets/images/logo.png',
                 height: 250,
               ),
               const SizedBox(height: 40),
@@ -177,7 +177,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: OutlinedButton.icon(
                   onPressed: isLoading ? null : _loginWithGoogle,
                   icon: Image.asset(
-                    'assets/images/google.jpg',
+                    'assets/images/google.png',
                     height: 20,
                     width: 20,
                   ),
