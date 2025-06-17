@@ -19,7 +19,7 @@ class SplashScreen extends StatelessWidget {
         if (snapshot.hasData) {
           return const DashboardScreen();
         }
-        return const LoginScreen();
+        return LoginScreen();
       },
     );
   }
