@@ -4,6 +4,7 @@ import 'package:ternakin/services/auth_services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class LoginScreen extends StatefulWidget {
+class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
   @override
@@ -81,7 +82,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor:   Colors.green[700],
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24.0),

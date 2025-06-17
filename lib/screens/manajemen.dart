@@ -17,7 +17,6 @@ class _ManajemenScreenState extends State<ManajemenScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Ambil data ringkasan dari masing-masing manajemen
     final ayam = getRingkasanAyam(activePeriod);
     final telur = getRingkasanTelur(activePeriod);
     final pakan = getRingkasanPakan(activePeriod);
@@ -66,7 +65,6 @@ class _ManajemenScreenState extends State<ManajemenScreen> {
       ),
       body: Column(
         children: [
-          // Bagian atas tombol kategori
           Container(
             color: Colors.green[100],
             padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
@@ -100,8 +98,6 @@ class _ManajemenScreenState extends State<ManajemenScreen> {
               ],
             ),
           ),
-
-          // Tab filter Harian, Mingguan, Bulanan
           Container(
             color: Colors.green[50],
             padding: const EdgeInsets.symmetric(vertical: 8),
@@ -116,8 +112,6 @@ class _ManajemenScreenState extends State<ManajemenScreen> {
               ],
             ),
           ),
-
-          // List ringkasan sesuai tab aktif
           Expanded(
             child: Container(
               color: Colors.green[50],
@@ -240,124 +234,107 @@ class _RingkasanItem extends StatelessWidget {
   Widget build(BuildContext context) {
     String jumlahText = label == 'Pakan' ? '$jumlah kg' : '$jumlah';
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: () {},
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            // ...existing code...
-            boxShadow: [
-              BoxShadow(
-                color: Colors.green.withAlpha(20), // 0.08 * 255 ≈ 20
-                blurRadius: 8,
-                offset: const Offset(0, 2),
+    return MouseRegion(
+      cursor: SystemMouseCursors.basic, // 🔧 agar kursor tidak berubah
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.green.withAlpha(20),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+        margin: const EdgeInsets.symmetric(vertical: 6),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.green[100],
+                borderRadius: BorderRadius.circular(8),
               ),
-            ],
-            // ...existing code...
-          ),
-          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-          margin: const EdgeInsets.symmetric(vertical: 6),
-          child: Row(
-            children: [
-              // Ikon
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.green[100],
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(icon, color: Colors.green[700], size: 28),
-              ),
-              const SizedBox(width: 8),
-
-              // Label + waktu
-              Expanded(
-                flex: 3,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      label,
-                      style: GoogleFonts.poppins(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                      overflow: TextOverflow.ellipsis,
+              child: Icon(icon, color: Colors.green[700], size: 28),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              flex: 3,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: GoogleFonts.poppins(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      waktu,
-                      style: GoogleFonts.poppins(
-                        fontSize: 12,
-                        color: Colors.grey,
-                      ),
-                      overflow: TextOverflow.ellipsis,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    waktu,
+                    style: GoogleFonts.poppins(
+                      fontSize: 12,
+                      color: Colors.grey,
                     ),
-                  ],
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              width: 1,
+              height: 40,
+              color: Colors.grey[400],
+              margin: const EdgeInsets.symmetric(horizontal: 6),
+            ),
+            Expanded(
+              flex: 3,
+              child: Center(
+                child: Text(
+                  ringkasan,
+                  style: GoogleFonts.poppins(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
                 ),
               ),
-
-              // Garis vertikal
-              Container(
-                width: 1,
-                height: 40,
-                color: Colors.grey[400],
-                margin: const EdgeInsets.symmetric(horizontal: 6),
-              ),
-
-              // Ringkasan
-              Expanded(
-                flex: 3,
-                child: Center(
-                  child: Text(
-                    ringkasan,
+            ),
+            Container(
+              width: 1,
+              height: 40,
+              color: Colors.grey[400],
+              margin: const EdgeInsets.symmetric(horizontal: 6),
+            ),
+            Expanded(
+              flex: 2,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    'Jumlah',
                     style: GoogleFonts.poppins(
                       fontWeight: FontWeight.w600,
                       fontSize: 14,
                     ),
                     overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
                   ),
-                ),
+                  const SizedBox(height: 4),
+                  Text(
+                    jumlahText,
+                    style: GoogleFonts.poppins(fontSize: 14),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
               ),
-
-              // Garis vertikal
-              Container(
-                width: 1,
-                height: 40,
-                color: Colors.grey[400],
-                margin: const EdgeInsets.symmetric(horizontal: 6),
-              ),
-
-              // Jumlah
-              Expanded(
-                flex: 2,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      'Jumlah',
-                      style: GoogleFonts.poppins(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      jumlahText,
-                      style: GoogleFonts.poppins(fontSize: 14),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

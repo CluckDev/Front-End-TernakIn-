@@ -23,7 +23,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   int _selectedIndex = 0;
 
   final List<Widget> _pages = [
-    DashboardContent(userName: 'Reza'),
+    DashboardContent(userName: 'Cipaaa'),
     JadwalScreen(),
     ManajemenScreen(),
     ProfilScreen(),
@@ -82,7 +82,7 @@ class _DashboardContentState extends State<DashboardContent> {
           Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [Colors.green.shade700, Colors.greenAccent.shade100],
+                colors: [Colors.green.shade700, Colors.green.shade400],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -109,7 +109,7 @@ class _DashboardContentState extends State<DashboardContent> {
                     CircleAvatar(
                       radius: 28,
                       backgroundColor: Colors.white,
-                      child: Icon(Icons.eco, color: Colors.green[700], size: 32),
+                      backgroundImage: AssetImage('assets/images/logo.png'),
                     ),
                     const SizedBox(width: 12),
                     Column(
@@ -148,10 +148,10 @@ class _DashboardContentState extends State<DashboardContent> {
                   },
                   child: Column(
                     children: [
-                      CircleAvatar(
+                     CircleAvatar(
                         radius: 24,
                         backgroundColor: Colors.white,
-                        child: Icon(Icons.person, color: Colors.green[700], size: 28),
+                        backgroundImage: AssetImage('assets/images/cipaaa.png'),
                       ),
                       const SizedBox(height: 4),
                       Text(
@@ -226,24 +226,29 @@ class _DashboardContentState extends State<DashboardContent> {
                       children: [
                         Container(
                           decoration: BoxDecoration(
-                            color: Colors.green[100],
+                            color: Colors.brown[100],
                             borderRadius: BorderRadius.circular(8),
                           ),
                           padding: const EdgeInsets.all(8),
                           child: Icon(chartIcons[selectedChart], color: Colors.green[700], size: 22),
                         ),
                         const SizedBox(width: 10),
-                        Expanded(
+                        // Ganti Expanded dengan Flexible agar lebih adaptif
+                        Flexible(
                           child: Text(
                             chartLabels[selectedChart]!,
                             style: GoogleFonts.poppins(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
                             ),
+                            overflow: TextOverflow.ellipsis, // Supaya tidak menumpuk
+                            maxLines: 1,
                           ),
                         ),
+                        const SizedBox(width: 8),
                         DropdownButton<String>(
                           value: selectedChart,
+                          isDense: true,
                           underline: const SizedBox(),
                           borderRadius: BorderRadius.circular(12),
                           items: chartLabels.entries.map((entry) {
