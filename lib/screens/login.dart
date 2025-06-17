@@ -1,8 +1,82 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:ternakin/services/auth_services.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
+
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
+  String? errorMessage;
+  bool isLoading = false;
+
+  void _login() async {
+    setState(() {
+      errorMessage = null;
+      isLoading = true;
+    });
+
+    final email = emailController.text.trim();
+    final password = passwordController.text;
+
+    if (email.isEmpty || password.isEmpty) {
+      setState(() {
+        errorMessage = 'Email dan password wajib diisi.';
+        isLoading = false;
+      });
+      return;
+    }
+
+    try {
+      await authService.signIn(email: email, password: password);
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, '/dashboard');
+      }
+    } on FirebaseAuthException catch (e) {
+      setState(() {
+        errorMessage = e.message ?? 'Gagal masuk.';
+      });
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  void _loginWithGoogle() async {
+    setState(() {
+      errorMessage = null;
+      isLoading = true;
+    });
+
+    try {
+      await authService.signInWithGoogle();
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, '/dashboard');
+      }
+    } catch (e) {
+      setState(() {
+        errorMessage = 'Gagal login dengan Google: ${e.toString()}';
+      });
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -13,15 +87,12 @@ class LoginScreen extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 24.0),
           child: Column(
             mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Logo
               Image.asset(
                 'assets/images/logo.jpg',
                 height: 250,
               ),
               const SizedBox(height: 40),
-              // Judul
               Text(
                 'TernakIn',
                 style: GoogleFonts.poppins(
@@ -31,10 +102,13 @@ class LoginScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 40),
+
               // Email
               TextField(
+                controller: emailController,
+                keyboardType: TextInputType.emailAddress,
                 decoration: InputDecoration(
-                  labelText: 'Masukan Username atau Email',
+                  labelText: 'Masukan Email',
                   prefixIcon: const Icon(Icons.email),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -44,8 +118,10 @@ class LoginScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 16),
+
               // Password
               TextField(
+                controller: passwordController,
                 obscureText: true,
                 decoration: InputDecoration(
                   labelText: 'Password',
@@ -57,57 +133,72 @@ class LoginScreen extends StatelessWidget {
                   fillColor: Colors.white,
                 ),
               ),
-              const SizedBox(height: 24),
-              // Tombol Masuk
-          // Tombol Masuk (ubah teks jadi putih)
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () {
-                Navigator.pushReplacementNamed(context, '/dashboard');
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green[700],
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+
+              const SizedBox(height: 16),
+
+              // Error Message
+              if (errorMessage != null)
+                Text(
+                  errorMessage!,
+                  style: const TextStyle(color: Colors.red),
                 ),
-                textStyle: GoogleFonts.poppins(fontSize: 16, color: Colors.white), // pastikan teks putih
-                elevation: 4,
-              ),
-              child: const Text('Masuk', style: TextStyle(color: Colors.white)),
-            ),
-          ),
 
-          const SizedBox(height: 16),
+              const SizedBox(height: 24),
 
-        // Tombol Login dengan Google
-        SizedBox(
-          width: double.infinity,
-          child: OutlinedButton.icon(
-            onPressed: () {
-              // Logika login dengan Google nanti di sini
-            },
-            icon: Image.asset(
-              'assets/images/google.jpg', // Pastikan kamu punya gambar logo Google ini di folder assets/images/
-              height: 20,
-              width: 20,
-            ),
-            label: Text(
-              'Masuk dengan Google',
-              style: GoogleFonts.poppins(fontSize: 16, color: Colors.black87),
-            ),
-            style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+              // Tombol Masuk
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: isLoading ? null : _login,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green[700],
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    textStyle: GoogleFonts.poppins(fontSize: 16),
+                    elevation: 4,
+                  ),
+                  child: isLoading
+                      ? const CircularProgressIndicator(
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(Colors.white),
+                        )
+                      : const Text('Masuk',
+                          style: TextStyle(color: Colors.white)),
+                ),
               ),
-              side: const BorderSide(color: Colors.grey), // border abu-abu
-              backgroundColor: Colors.white,
-              elevation: 0,
-            ),
-          ),
-        ),
+
+              const SizedBox(height: 16),
+
+              // Tombol Login dengan Google
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: isLoading ? null : _loginWithGoogle,
+                  icon: Image.asset(
+                    'assets/images/google.jpg',
+                    height: 20,
+                    width: 20,
+                  ),
+                  label: Text(
+                    'Masuk dengan Google',
+                    style: GoogleFonts.poppins(
+                        fontSize: 16, color: Colors.black87),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    side: const BorderSide(color: Colors.grey),
+                    backgroundColor: Colors.white,
+                    elevation: 0,
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
 
               // Link daftar
               TextButton(
@@ -119,6 +210,7 @@ class LoginScreen extends StatelessWidget {
                   style: GoogleFonts.poppins(color: Colors.green[700]),
                 ),
               ),
+
               // Link lupa password
               TextButton(
                 onPressed: () {

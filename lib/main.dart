@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:ternakin/widgets/auth_guard.dart';
+import 'firebase_options.dart';
+import 'screens/splash_screen.dart';
+import 'screens/login.dart';
 import 'screens/register.dart';
 import 'screens/dashboard.dart';
-import 'screens/login.dart';
 import 'screens/forgot_password.dart';
 import 'screens/manajemen.dart';
 import 'screens/manajemen_ayam.dart';
@@ -11,12 +16,18 @@ import 'screens/manajemen_kesehatan.dart';
 import 'screens/profile.dart';
 import 'screens/pengaturan_screen.dart';
 import 'screens/notifikasi_screen.dart';
-// Tambahkan import lain jika ada
 
-// ValueNotifier untuk ThemeMode (untuk pengaturan tema dinamis)
+// Notifier untuk ThemeMode
 final ValueNotifier<ThemeMode> themeNotifier = ValueNotifier(ThemeMode.system);
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
   runApp(
     ValueListenableBuilder<ThemeMode>(
       valueListenable: themeNotifier,
@@ -47,11 +58,12 @@ class MyApp extends StatelessWidget {
         scaffoldBackgroundColor: const Color(0xFF222222),
       ),
       themeMode: themeMode,
-      initialRoute: '/login',
+      initialRoute: '/',
       routes: {
+        '/': (context) => const SplashScreen(),
         '/login': (context) => const LoginScreen(),
         '/register': (context) => const RegisterScreen(),
-        '/dashboard': (context) => const DashboardScreen(),
+        '/dashboard': (context) => const AuthGuard(child: DashboardScreen()),
         '/forgot-password': (context) => const ForgotPasswordScreen(),
         '/manajemen': (context) => const ManajemenScreen(),
         '/manajemen-ayam': (context) => const ManajemenAyamScreen(),
@@ -61,7 +73,6 @@ class MyApp extends StatelessWidget {
         '/profile': (context) => const ProfilScreen(),
         '/pengaturan': (context) => const PengaturanScreen(),
         '/notifikasi': (context) => const NotifikasiScreen(),
-        // Tambahkan route lain jika ada
       },
     );
   }

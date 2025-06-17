@@ -1,8 +1,72 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:ternakin/services/auth_services.dart';
 
-class RegisterScreen extends StatelessWidget {
+class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
+
+  @override
+  State<RegisterScreen> createState() => _RegisterScreenState();
+}
+
+class _RegisterScreenState extends State<RegisterScreen> {
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
+  final confirmPasswordController = TextEditingController();
+
+  bool isLoading = false;
+  String? errorMessage;
+
+  void _register() async {
+    setState(() {
+      errorMessage = null;
+      isLoading = true;
+    });
+
+    final email = emailController.text.trim();
+    final password = passwordController.text;
+    final confirmPassword = confirmPasswordController.text;
+
+    if (email.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
+      setState(() {
+        errorMessage = 'All fields are required to be filled in';
+        isLoading = false;
+      });
+      return;
+    }
+
+    if (password != confirmPassword) {
+      setState(() {
+        errorMessage = 'Password and confirm password do not match';
+        isLoading = false;
+      });
+      return;
+    }
+
+    try {
+      await authService.signUp(email: email, password: password);
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, '/dashboard');
+      }
+    } on FirebaseAuthException catch (e) {
+      setState(() {
+        errorMessage = e.message ?? 'An error occurred during registration.';
+      });
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    confirmPasswordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -20,13 +84,11 @@ class RegisterScreen extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Logo
               Image.asset(
                 'assets/images/logo.jpg',
                 height: 150,
               ),
               const SizedBox(height: 24),
-              // Judul
               Text(
                 'Buat Akun Baru',
                 style: GoogleFonts.poppins(
@@ -37,35 +99,53 @@ class RegisterScreen extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 40),
-              const TextField(
-                decoration: InputDecoration(
-                  labelText: 'Nama Lengkap',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 16),
-              const TextField(
-                decoration: InputDecoration(
+              TextField(
+                controller: emailController,
+                keyboardType: TextInputType.emailAddress,
+                decoration: const InputDecoration(
                   labelText: 'Email',
                   border: OutlineInputBorder(),
                 ),
+                style: TextStyle(
+                  color: Colors.green[700],
+                ),
               ),
               const SizedBox(height: 16),
-              const TextField(
+              TextField(
+                controller: passwordController,
                 obscureText: true,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'Password',
                   border: OutlineInputBorder(),
                 ),
+                style: TextStyle(
+                  color: Colors.green[700],
+                ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
+              TextField(
+                controller: confirmPasswordController,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  labelText: 'Konfirmasi Password',
+                  border: OutlineInputBorder(),
+                ),
+                style: TextStyle(
+                  color: Colors.green[700],
+                ),
+              ),
+              const SizedBox(height: 16),
+              if (errorMessage != null)
+                Text(
+                  errorMessage!,
+                  style: const TextStyle(color: Colors.red),
+                ),
+              const SizedBox(height: 16),
               ElevatedButton(
-                onPressed: () {
-                  Navigator.pushReplacementNamed(context, '/dashboard');
-                },
+                onPressed: isLoading ? null : _register,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.green[700],
-                  foregroundColor: Colors.white, // 🔴 teks putih
+                  foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   textStyle: GoogleFonts.poppins(fontSize: 16),
                   shape: RoundedRectangleBorder(
@@ -73,7 +153,11 @@ class RegisterScreen extends StatelessWidget {
                   ),
                   elevation: 4,
                 ),
-                child: const Text('Daftar'),
+                child: isLoading
+                    ? const CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      )
+                    : const Text('Daftar'),
               ),
               const SizedBox(height: 12),
               TextButton(
