@@ -74,7 +74,7 @@ class _JadwalScreenState extends State<JadwalScreen> {
     }
   }
 
-  @override
+@override
   Widget build(BuildContext context) {
     final filteredJadwal = selectedFilterDate == null
         ? daftarJadwal
@@ -82,37 +82,16 @@ class _JadwalScreenState extends State<JadwalScreen> {
             .where((jadwal) => jadwal.tanggal.toLocal().toString().split(" ")[0] == selectedFilterDate!.toString().split(" ")[0])
             .toList();
 
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+    final onSurfaceSecondary = onSurface.withValues(alpha: 0.7 * 255);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Jadwal Kegiatan'),
         backgroundColor: Colors.green[700],
         elevation: 2,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.filter_list),
-            onPressed: () async {
-              final date = await showDatePicker(
-                context: context,
-                initialDate: DateTime.now(),
-                firstDate: DateTime(2023),
-                lastDate: DateTime(2030),
-              );
-              if (date != null) {
-                setState(() {
-                  selectedFilterDate = date;
-                });
-              }
-            },
-          ),
-          if (selectedFilterDate != null)
-            IconButton(
-              icon: const Icon(Icons.clear),
-              onPressed: () {
-                setState(() {
-                  selectedFilterDate = null;
-                });
-              },
-            ),
+          // ...existing code...
         ],
       ),
       body: filteredJadwal.isEmpty
@@ -122,9 +101,9 @@ class _JadwalScreenState extends State<JadwalScreen> {
                 children: [
                   Icon(Icons.event_note, color: Colors.green[200], size: 80),
                   const SizedBox(height: 16),
-                  const Text(
+                  Text(
                     'Belum ada jadwal ditambahkan.',
-                    style: TextStyle(fontSize: 18, color: Colors.black54),
+                    style: TextStyle(fontSize: 18, color: onSurfaceSecondary),
                   ),
                 ],
               ),
@@ -138,10 +117,11 @@ class _JadwalScreenState extends State<JadwalScreen> {
                   elevation: 3,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                   margin: const EdgeInsets.symmetric(vertical: 8),
+                  color: Theme.of(context).colorScheme.surface,
                   child: ListTile(
                     contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                     leading: CircleAvatar(
-                      backgroundColor: _getAktivitasColor(jadwal.aktivitas).withValues(alpha: 0.15 * 255),
+                      backgroundColor: _getAktivitasColor(jadwal.aktivitas).withValues(alpha: (0.15 * 255)),
                       child: Icon(
                         _getAktivitasIcon(jadwal.aktivitas),
                         color: _getAktivitasColor(jadwal.aktivitas),
@@ -150,7 +130,11 @@ class _JadwalScreenState extends State<JadwalScreen> {
                     ),
                     title: Text(
                       jadwal.aktivitas,
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: onSurface,
+                      ),
                     ),
                     subtitle: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -158,18 +142,18 @@ class _JadwalScreenState extends State<JadwalScreen> {
                         const SizedBox(height: 4),
                         Row(
                           children: [
-                            const Icon(Icons.calendar_today, size: 14, color: Colors.grey),
+                            Icon(Icons.calendar_today, size: 14, color: onSurfaceSecondary),
                             const SizedBox(width: 4),
                             Text(
                               jadwal.tanggal.toLocal().toString().split(" ")[0],
-                              style: const TextStyle(fontSize: 13, color: Colors.grey),
+                              style: TextStyle(fontSize: 13, color: onSurfaceSecondary),
                             ),
                             const SizedBox(width: 12),
-                            const Icon(Icons.access_time, size: 14, color: Colors.grey),
+                            Icon(Icons.access_time, size: 14, color: onSurfaceSecondary),
                             const SizedBox(width: 4),
                             Text(
                               jadwal.waktu,
-                              style: const TextStyle(fontSize: 13, color: Colors.grey),
+                              style: TextStyle(fontSize: 13, color: onSurfaceSecondary),
                             ),
                           ],
                         ),
@@ -177,7 +161,7 @@ class _JadwalScreenState extends State<JadwalScreen> {
                           const SizedBox(height: 4),
                           Text(
                             jadwal.catatan,
-                            style: const TextStyle(fontSize: 13, color: Colors.black87),
+                            style: TextStyle(fontSize: 13, color: onSurfaceSecondary),
                           ),
                         ],
                       ],
@@ -186,12 +170,12 @@ class _JadwalScreenState extends State<JadwalScreen> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         IconButton(
-                          icon: const Icon(Icons.edit, color: Colors.orange),
+                          icon: Icon(Icons.edit, color: Colors.orange[700]),
                           tooltip: 'Edit',
                           onPressed: () => _editJadwal(index),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.delete, color: Colors.red),
+                          icon: Icon(Icons.delete, color: Colors.red[700]),
                           tooltip: 'Hapus',
                           onPressed: () => _hapusJadwal(index),
                         ),
@@ -201,7 +185,7 @@ class _JadwalScreenState extends State<JadwalScreen> {
                 );
               },
             ),
-            floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton(
         onPressed: _navigateToTambahJadwal,
         backgroundColor: Colors.green,
         tooltip: 'Tambah Jadwal',

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../main.dart';
 
 class PengaturanScreen extends StatelessWidget {
   const PengaturanScreen({super.key});
@@ -20,45 +19,6 @@ class PengaturanScreen extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => const GantiPasswordScreen()),
-              );
-            },
-          ),
-          const Divider(),
-          SwitchListTile(
-            secondary: const Icon(Icons.brightness_6),
-            title: const Text('Tema Gelap'),
-            value: Theme.of(context).brightness == Brightness.dark,
-            onChanged: (val) {
-              themeNotifier.value = val ? ThemeMode.dark : ThemeMode.light;
-            },
-          ),
-          const Divider(),
-          ListTile(
-            leading: const Icon(Icons.language),
-            title: const Text('Bahasa'),
-            trailing: const Text('Indonesia'),
-            onTap: () {
-              showDialog(
-                context: context,
-                builder: (context) => SimpleDialog(
-                  title: const Text('Pilih Bahasa'),
-                  children: [
-                    SimpleDialogOption(
-                      child: const Text('Indonesia'),
-                      onPressed: () {
-                        // TODO: Set bahasa ke Indonesia
-                        Navigator.pop(context);
-                      },
-                    ),
-                    SimpleDialogOption(
-                      child: const Text('English'),
-                      onPressed: () {
-                        // TODO: Set bahasa ke English
-                        Navigator.pop(context);
-                      },
-                    ),
-                  ],
-                ),
               );
             },
           ),
@@ -148,7 +108,7 @@ class PengaturanScreen extends StatelessWidget {
   }
 }
 
-// ...GantiPasswordScreen tetap seperti sebelumnya...
+// GantiPasswordScreen tetap seperti sebelumnya
 class GantiPasswordScreen extends StatefulWidget {
   const GantiPasswordScreen({super.key});
 
@@ -244,6 +204,7 @@ class _GantiPasswordScreenState extends State<GantiPasswordScreen> {
                   onPressed: _submit,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green[700],
+                    foregroundColor: Colors.white, // <-- Tambahkan ini agar teks putih
                     padding: const EdgeInsets.symmetric(vertical: 14),
                   ),
                   child: const Text('Simpan', style: TextStyle(fontSize: 16)),
