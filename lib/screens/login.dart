@@ -4,7 +4,6 @@ import 'package:ternakin/services/auth_services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class LoginScreen extends StatefulWidget {
-class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
   @override
@@ -82,7 +81,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor:   Colors.green[700],
+      backgroundColor: Colors.green[700],
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -90,7 +89,7 @@ class _LoginScreenState extends State<LoginScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Image.asset(
-                'assets/images/logo.jpg',
+                'assets/images/logo.png',
                 height: 250,
               ),
               const SizedBox(height: 40),
@@ -178,7 +177,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: OutlinedButton.icon(
                   onPressed: isLoading ? null : _loginWithGoogle,
                   icon: Image.asset(
-                    'assets/images/google.jpg',
+                    'assets/images/google.png',
                     height: 20,
                     width: 20,
                   ),

@@ -22,7 +22,7 @@ class AuthGuard extends StatelessWidget {
         if (snapshot.hasData) {
           return child;
         } else {
-          return const LoginScreen(); // Redirect jika belum login
+          return LoginScreen(); // Redirect jika belum login
         }
       },
     );
