@@ -81,7 +81,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.green[700],
+      backgroundColor: Colors.white,
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -107,6 +107,7 @@ class _LoginScreenState extends State<LoginScreen> {
               TextField(
                 controller: emailController,
                 keyboardType: TextInputType.emailAddress,
+                style: GoogleFonts.poppins(fontSize: 16, color: Colors.black),
                 decoration: InputDecoration(
                   labelText: 'Masukan Email',
                   prefixIcon: const Icon(Icons.email),
@@ -123,6 +124,7 @@ class _LoginScreenState extends State<LoginScreen> {
               TextField(
                 controller: passwordController,
                 obscureText: true,
+                style: GoogleFonts.poppins(fontSize: 16, color: Colors.black),
                 decoration: InputDecoration(
                   labelText: 'Password',
                   prefixIcon: const Icon(Icons.lock),

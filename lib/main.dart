@@ -16,17 +16,35 @@ import 'screens/manajemen_kesehatan.dart';
 import 'screens/profile.dart';
 import 'screens/pengaturan_screen.dart';
 import 'screens/notifikasi_screen.dart';
+import 'services/supabase_services.dart'; // Pastikan path ini benar
+import 'package:flutter_dotenv/flutter_dotenv.dart'; // Import flutter_dotenv
+import 'package:supabase_flutter/supabase_flutter.dart'; // Import Supabase Flutter
 
 // Notifier untuk ThemeMode
 final ValueNotifier<ThemeMode> themeNotifier = ValueNotifier(ThemeMode.system);
+
+// Deklarasikan supabaseService sebagai late final
+late final SupabaseService supabaseService;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 
+  // PENTING: Muat file .env di sini SEBELUM mencoba mengakses variabelnya
+  await dotenv.load(fileName: ".env");
+
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
+  // Inisialisasi Supabase secara global di sini, hanya sekali
+  await Supabase.initialize(
+    url: dotenv.env['SUPABASE_URL']!, // Ambil dari .env
+    anonKey: dotenv.env['SUPABASE_ANON_KEY']!, // Ambil dari .env
+  );
+
+  // Inisialisasi instance supabaseService SETELAH Supabase.initialize selesai
+  supabaseService = SupabaseService();
 
   runApp(
     ValueListenableBuilder<ThemeMode>(
