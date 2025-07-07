@@ -20,9 +20,6 @@ import 'services/supabase_services.dart'; // Pastikan path ini benar
 import 'package:flutter_dotenv/flutter_dotenv.dart'; // Import flutter_dotenv
 import 'package:supabase_flutter/supabase_flutter.dart'; // Import Supabase Flutter
 
-// Notifier untuk ThemeMode
-final ValueNotifier<ThemeMode> themeNotifier = ValueNotifier(ThemeMode.system);
-
 // Deklarasikan supabaseService sebagai late final
 late final SupabaseService supabaseService;
 
@@ -46,19 +43,11 @@ void main() async {
   // Inisialisasi instance supabaseService SETELAH Supabase.initialize selesai
   supabaseService = SupabaseService();
 
-  runApp(
-    ValueListenableBuilder<ThemeMode>(
-      valueListenable: themeNotifier,
-      builder: (context, mode, _) {
-        return MyApp(themeMode: mode);
-      },
-    ),
-  );
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  final ThemeMode themeMode;
-  const MyApp({super.key, required this.themeMode});
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -70,12 +59,6 @@ class MyApp extends StatelessWidget {
         scaffoldBackgroundColor: const Color(0xFFF8F9FA),
         brightness: Brightness.light,
       ),
-      darkTheme: ThemeData(
-        brightness: Brightness.dark,
-        primarySwatch: Colors.green,
-        scaffoldBackgroundColor: const Color(0xFF222222),
-      ),
-      themeMode: themeMode,
       initialRoute: '/',
       routes: {
         '/': (context) => const SplashScreen(),

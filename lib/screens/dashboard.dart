@@ -111,9 +111,9 @@ class _DashboardContentState extends State<DashboardContent> {
                       backgroundColor: Colors.white,
                       backgroundImage: AssetImage('assets/images/logo.png'),
                     ),
-                    const SizedBox(width: 12),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
+                      
                       children: [
                         Text(
                           'Selamat datang di aplikasi kami',
@@ -144,11 +144,12 @@ class _DashboardContentState extends State<DashboardContent> {
                 // Profil user (bisa diklik ke halaman profil)
                 GestureDetector(
                   onTap: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (_) => ProfilScreen()));
+                    Navigator.push(context,
+                        MaterialPageRoute(builder: (_) => ProfilScreen()));
                   },
                   child: Column(
                     children: [
-                     CircleAvatar(
+                      CircleAvatar(
                         radius: 24,
                         backgroundColor: Colors.white,
                         backgroundImage: AssetImage('assets/images/cipaaa.png'),
@@ -180,7 +181,10 @@ class _DashboardContentState extends State<DashboardContent> {
                   value: DataSummaryService.getTotalTelur().toString(),
                   icon: Icons.egg,
                   onTap: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (_) => ManajemenTelurScreen()));
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => ManajemenTelurScreen()));
                   },
                 ),
                 SummaryCard(
@@ -188,7 +192,10 @@ class _DashboardContentState extends State<DashboardContent> {
                   value: DataSummaryService.getTotalAyam().toString(),
                   icon: Icons.pets,
                   onTap: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (_) => ManajemenAyamScreen()));
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => ManajemenAyamScreen()));
                   },
                 ),
                 SummaryCard(
@@ -196,7 +203,10 @@ class _DashboardContentState extends State<DashboardContent> {
                   value: DataSummaryService.getTotalPakan().toString(),
                   icon: Icons.rice_bowl,
                   onTap: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (_) => ManajemenPakanScreen()));
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => ManajemenPakanScreen()));
                   },
                 ),
                 SummaryCard(
@@ -204,7 +214,10 @@ class _DashboardContentState extends State<DashboardContent> {
                   value: DataSummaryService.getTotalSakit().toString(),
                   icon: Icons.warning,
                   onTap: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (_) => ManajemenKesehatanScreen()));
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => ManajemenKesehatanScreen()));
                   },
                 ),
               ],
@@ -215,7 +228,8 @@ class _DashboardContentState extends State<DashboardContent> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Card(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16)),
               elevation: 3,
               child: Padding(
                 padding: const EdgeInsets.all(16),
@@ -230,7 +244,8 @@ class _DashboardContentState extends State<DashboardContent> {
                             borderRadius: BorderRadius.circular(8),
                           ),
                           padding: const EdgeInsets.all(8),
-                          child: Icon(chartIcons[selectedChart], color: Colors.green[700], size: 22),
+                          child: Icon(chartIcons[selectedChart],
+                              color: Colors.green[700], size: 22),
                         ),
                         const SizedBox(width: 10),
                         // Ganti Expanded dengan Flexible agar lebih adaptif
@@ -241,7 +256,8 @@ class _DashboardContentState extends State<DashboardContent> {
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
                             ),
-                            overflow: TextOverflow.ellipsis, // Supaya tidak menumpuk
+                            overflow:
+                                TextOverflow.ellipsis, // Supaya tidak menumpuk
                             maxLines: 1,
                           ),
                         ),
@@ -254,11 +270,13 @@ class _DashboardContentState extends State<DashboardContent> {
                           items: chartLabels.entries.map((entry) {
                             return DropdownMenuItem<String>(
                               value: entry.key,
-                              child: Text(entry.value, style: GoogleFonts.poppins(fontSize: 14)),
+                              child: Text(entry.value,
+                                  style: GoogleFonts.poppins(fontSize: 14)),
                             );
                           }).toList(),
                           onChanged: (val) {
-                            if (val != null) setState(() => selectedChart = val);
+                            if (val != null)
+                              setState(() => selectedChart = val);
                           },
                         ),
                       ],
@@ -266,7 +284,8 @@ class _DashboardContentState extends State<DashboardContent> {
                     const SizedBox(height: 12),
                     SizedBox(
                       height: 220,
-                      child: DashboardChart(period: 'daily', type: selectedChart),
+                      child:
+                          DashboardChart(period: 'daily', type: selectedChart),
                     ),
                   ],
                 ),
@@ -279,17 +298,21 @@ class _DashboardContentState extends State<DashboardContent> {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Text(
               'Aktivitas Terakhir',
-              style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold),
+              style: GoogleFonts.poppins(
+                  fontSize: 16, fontWeight: FontWeight.bold),
             ),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Card(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
               child: ListTile(
                 leading: Icon(Icons.add, color: Colors.green[700]),
-                title: Text('Tambah data ayam', style: GoogleFonts.poppins(fontSize: 14)),
-                subtitle: Text('Hari ini, 08:00', style: GoogleFonts.poppins(fontSize: 12)),
+                title: Text('Tambah data ayam',
+                    style: GoogleFonts.poppins(fontSize: 14)),
+                subtitle: Text('Hari ini, 08:00',
+                    style: GoogleFonts.poppins(fontSize: 12)),
               ),
             ),
           ),
@@ -299,7 +322,8 @@ class _DashboardContentState extends State<DashboardContent> {
             child: ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.green[700],
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
                 minimumSize: const Size.fromHeight(48),
               ),
               onPressed: () {
@@ -311,7 +335,8 @@ class _DashboardContentState extends State<DashboardContent> {
               icon: const Icon(Icons.bar_chart, color: Colors.white),
               label: Text(
                 'Lihat Statistik Lengkap',
-                style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold),
+                style: GoogleFonts.poppins(
+                    color: Colors.white, fontWeight: FontWeight.bold),
               ),
             ),
           ),
