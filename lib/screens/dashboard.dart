@@ -193,7 +193,7 @@ class _DashboardContentState extends State<DashboardContent> {
                                 widget.photoUrl!.isNotEmpty
                             ? NetworkImage(widget.photoUrl!)
                                 as ImageProvider<Object>?
-                            : const AssetImage('assets/images/cipaaa.png'),
+                            : const AssetImage('assets/images/logo.png'),
                         // Jika tidak ada gambar, tampilkan ikon default
                         child:
                             widget.photoUrl == null || widget.photoUrl!.isEmpty

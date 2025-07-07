@@ -6,9 +6,14 @@ import 'edit_profile_screen.dart';
 import 'statistik_screen.dart';
 import 'pengaturan_screen.dart';
 import 'notifikasi_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart' as fb_auth; // Alias untuk User Firebase
 
 class ProfilScreen extends StatefulWidget {
-  const ProfilScreen({super.key});
+  // Hapus properti ini karena data akan dimuat di dalam state
+  // final String email;
+  // final String photoUrl;
+  // final String username;
+  const ProfilScreen({super.key}); // Ubah konstruktor
 
   @override
   State<ProfilScreen> createState() => _ProfilScreenState();
@@ -16,14 +21,49 @@ class ProfilScreen extends StatefulWidget {
 
 class _ProfilScreenState extends State<ProfilScreen> {
   String? errorMessage;
+  String _nama = 'Pengguna'; // State untuk nama pengguna
+  String _email = 'email@example.com'; // State untuk email pengguna
+  String? _photoUrl; // State untuk URL foto profil
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserProfile(); // Muat data profil saat initState
+  }
+
+  // Metode untuk memuat data profil dari Firebase Auth
+  void _loadUserProfile() {
+    final user = authService.currentUser;
+    setState(() {
+      if (user != null) {
+        _nama = user.displayName ?? 'Pengguna';
+        _email = user.email ?? 'email@example.com';
+        _photoUrl = user.photoURL;
+      } else {
+        _nama = 'Pengguna';
+        _email = 'email@example.com';
+        _photoUrl = null;
+      }
+    });
+  }
+
   void logout() async {
     try {
-      authService.signOut();
+      await authService.signOut();
+      // Setelah logout, navigasi ke layar login atau splash
+      if (mounted) {
+        Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+      }
     } catch (e) {
-      setState(() {
-        errorMessage = e.toString();
-      });
-      return;
+      if (mounted) {
+        setState(() {
+          errorMessage = e.toString();
+        });
+        // Tampilkan SnackBar atau AlertDialog untuk error
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal logout: $e')),
+        );
+      }
     }
   }
 
@@ -36,10 +76,10 @@ class _ProfilScreenState extends State<ProfilScreen> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
-            Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => const DashboardScreen()));
+            // Ketika kembali dari ProfilScreen, kita ingin me-refresh DashboardScreen
+            // agar data profil terbaru (nama/foto) dimuat ulang.
+            // Pop the current route and potentially trigger a refresh on the previous route
+            Navigator.pop(context);
           },
         ),
       ),
@@ -59,14 +99,21 @@ class _ProfilScreenState extends State<ProfilScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const CircleAvatar(
+                CircleAvatar(
                   radius: 40,
                   backgroundColor: Colors.white,
-                  child: Icon(Icons.person, color: Colors.green, size: 40),
+                  // Tampilkan gambar profil dinamis
+                  backgroundImage: _photoUrl != null && _photoUrl!.isNotEmpty
+                      ? NetworkImage(_photoUrl!) as ImageProvider<Object>?
+                      : const AssetImage('assets/images/cipaaa.png'), // Default image
+                  // Jika tidak ada gambar, tampilkan ikon default
+                  child: _photoUrl == null || _photoUrl!.isEmpty
+                      ? const Icon(Icons.person, color: Colors.green, size: 40)
+                      : null,
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'Rakarey',
+                  _nama, // Gunakan nama dari state
                   style: GoogleFonts.poppins(
                     color: Colors.white,
                     fontSize: 18,
@@ -74,7 +121,7 @@ class _ProfilScreenState extends State<ProfilScreen> {
                   ),
                 ),
                 Text(
-                  'rakarey120@email.com',
+                  _email, // Gunakan email dari state
                   style: GoogleFonts.poppins(
                     color: Colors.white70,
                     fontSize: 14,
@@ -86,7 +133,6 @@ class _ProfilScreenState extends State<ProfilScreen> {
           const SizedBox(height: 24),
 
           // Menu List
-          // ...existing code...
           _profileMenu(
             context,
             icon: Icons.edit,
@@ -96,11 +142,14 @@ class _ProfilScreenState extends State<ProfilScreen> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                    builder: (context) => const EditProfilScreen()),
-              );
+                  builder: (context) => const EditProfilScreen(),
+                ),
+              ).then((_) {
+                // Setelah kembali dari EditProfilScreen, muat ulang data profil
+                _loadUserProfile();
+              });
             },
           ),
-          // ...existing code...
           _profileMenu(
             context,
             icon: Icons.bar_chart,
@@ -110,7 +159,8 @@ class _ProfilScreenState extends State<ProfilScreen> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                    builder: (context) => const StatistikScreen()),
+                  builder: (context) => const StatistikScreen(),
+                ),
               );
             },
           ),
@@ -123,7 +173,8 @@ class _ProfilScreenState extends State<ProfilScreen> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                    builder: (context) => const PengaturanScreen()),
+                  builder: (context) => const PengaturanScreen(),
+                ),
               );
             },
           ),
@@ -136,7 +187,8 @@ class _ProfilScreenState extends State<ProfilScreen> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                    builder: (context) => const NotifikasiScreen()),
+                  builder: (context) => const NotifikasiScreen(),
+                ),
               );
             },
           ),
@@ -163,7 +215,7 @@ class _ProfilScreenState extends State<ProfilScreen> {
                   ],
                 ),
               );
-              if (!context.mounted) return; // <-- Tambahkan ini
+              if (!context.mounted) return;
               if (confirm == true) {
                 logout();
               }
