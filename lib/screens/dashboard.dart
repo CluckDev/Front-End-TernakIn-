@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:ternakin/services/auth_services.dart';
 import '../widgets/bottom_navbar.dart';
 import 'dashboard_chart.dart';
 import 'jadwal.dart';
@@ -11,6 +12,7 @@ import 'manajemen_telur.dart';
 import 'profile.dart';
 import 'statistik_screen.dart';
 import 'data_summary_service.dart';
+import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -21,13 +23,39 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   int _selectedIndex = 0;
+  String _userName = 'Pengguna'; // Default value
+  String? _photoUrl; // Default to null
 
-  final List<Widget> _pages = [
-    DashboardContent(userName: 'Cipaaa'),
-    JadwalScreen(),
-    ManajemenScreen(),
-    ProfilScreen(),
-  ];
+  // Langganan untuk mendengarkan perubahan status otentikasi
+  late final Stream<fb_auth.User?> _authStateChangesSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    // Inisialisasi langganan di initState
+    _authStateChangesSubscription = authService.authStateChanges;
+    _authStateChangesSubscription.listen((fb_auth.User? user) {
+      if (mounted) {
+        // Pastikan widget masih ada di tree
+        _loadUserProfile(user);
+      }
+    });
+
+    // Muat profil awal saat widget pertama kali dibuat
+    _loadUserProfile(authService.currentUser);
+  }
+
+  void _loadUserProfile(fb_auth.User? user) {
+    setState(() {
+      if (user != null) {
+        _userName = user.displayName ?? 'Pengguna';
+        _photoUrl = user.photoURL;
+      } else {
+        _userName = 'Pengguna';
+        _photoUrl = null;
+      }
+    });
+  }
 
   void _onTap(int index) {
     setState(() {
@@ -37,8 +65,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Bangun DashboardContent di sini agar selalu menggunakan _userName dan _photoUrl terbaru
+    final List<Widget> currentPage = [
+      DashboardContent(userName: _userName, photoUrl: _photoUrl),
+      JadwalScreen(),
+      ManajemenScreen(),
+      ProfilScreen(),
+    ];
+
     return Scaffold(
-      body: SafeArea(child: _pages[_selectedIndex]),
+      body: SafeArea(child: currentPage[_selectedIndex]), // Gunakan currentPage
       bottomNavigationBar: BottomNavBar(
         currentIndex: _selectedIndex,
         onTap: _onTap,
@@ -49,7 +85,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
 class DashboardContent extends StatefulWidget {
   final String userName;
-  const DashboardContent({super.key, required this.userName});
+  final String? photoUrl; // Tambahkan properti photoUrl
+  const DashboardContent({super.key, required this.userName, this.photoUrl});
 
   @override
   State<DashboardContent> createState() => _DashboardContentState();
@@ -111,9 +148,9 @@ class _DashboardContentState extends State<DashboardContent> {
                       backgroundColor: Colors.white,
                       backgroundImage: AssetImage('assets/images/logo.png'),
                     ),
+                    const SizedBox(width: 12),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      
                       children: [
                         Text(
                           'Selamat datang di aplikasi kami',
@@ -152,7 +189,16 @@ class _DashboardContentState extends State<DashboardContent> {
                       CircleAvatar(
                         radius: 24,
                         backgroundColor: Colors.white,
-                        backgroundImage: AssetImage('assets/images/cipaaa.png'),
+                        backgroundImage: widget.photoUrl != null &&
+                                widget.photoUrl!.isNotEmpty
+                            ? NetworkImage(widget.photoUrl!)
+                                as ImageProvider<Object>?
+                            : const AssetImage('assets/images/cipaaa.png'),
+                        // Jika tidak ada gambar, tampilkan ikon default
+                        child:
+                            widget.photoUrl == null || widget.photoUrl!.isEmpty
+                                ? Icon(Icons.person, color: Colors.green[700])
+                                : null,
                       ),
                       const SizedBox(height: 4),
                       Text(
@@ -275,8 +321,9 @@ class _DashboardContentState extends State<DashboardContent> {
                             );
                           }).toList(),
                           onChanged: (val) {
-                            if (val != null)
+                            if (val != null) {
                               setState(() => selectedChart = val);
+                              }
                           },
                         ),
                       ],
