@@ -17,12 +17,47 @@ List<KesehatanAyam> kesehatanList = [
   // Tambahkan data asli kamu di sini
 ];
 
-// Contoh model KesehatanAyam
+// Model KesehatanAyam
 class KesehatanAyam {
   final String tanggal;
   final String kasus;
   final int jumlah;
   KesehatanAyam({required this.tanggal, required this.kasus, required this.jumlah});
+}
+
+// Model ringkasan kesehatan
+class RingkasanKesehatan {
+  final int jumlah;
+  final String waktu;
+  final String ringkasan;
+  RingkasanKesehatan({
+    required this.jumlah,
+    required this.waktu,
+    required this.ringkasan,
+  });
+}
+
+// Fungsi untuk ambil ringkasan
+RingkasanKesehatan getRingkasanKesehatan(String periode) {
+  if (periode == 'Harian') {
+    return RingkasanKesehatan(
+      jumlah: 5,
+      waktu: '08:00 - 20 April',
+      ringkasan: 'Ayam sakit: 5 ekor',
+    );
+  } else if (periode == 'Mingguan') {
+    return RingkasanKesehatan(
+      jumlah: 35,
+      waktu: 'Minggu ini',
+      ringkasan: 'Ayam sakit: 35 ekor',
+    );
+  } else {
+    return RingkasanKesehatan(
+      jumlah: 150,
+      waktu: 'Bulan ini',
+      ringkasan: 'Ayam sakit: 150 ekor',
+    );
+  }
 }
 
 class ManajemenKesehatanScreen extends StatefulWidget {
@@ -37,21 +72,14 @@ class _ManajemenKesehatanScreenState extends State<ManajemenKesehatanScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final pemeriksaan = getRingkasanKesehatan(activePeriod);
+    final kesehatan = getRingkasanKesehatan(activePeriod);
     final ringkasanList = [
       _RingkasanData(
-        'Pemeriksaan',
+        'Kesehatan',
         Icons.health_and_safety,
-        pemeriksaan.jumlah,
-        pemeriksaan.waktu,
-        pemeriksaan.ringkasan,
-      ),
-      _RingkasanData(
-        'Vaksin',
-        Icons.health_and_safety,
-        10,
-        '08:00 - 20 April',
-        '10 ekor',
+        kesehatan.jumlah,
+        kesehatan.waktu,
+        kesehatan.ringkasan,
       ),
     ];
 
@@ -67,7 +95,6 @@ class _ManajemenKesehatanScreenState extends State<ManajemenKesehatanScreen> {
       ),
       body: Column(
         children: [
-          // Tampilkan total data kesehatan di sini
           Padding(
             padding: const EdgeInsets.only(top: 16, left: 16, right: 16, bottom: 0),
             child: Row(
@@ -81,7 +108,6 @@ class _ManajemenKesehatanScreenState extends State<ManajemenKesehatanScreen> {
               ],
             ),
           ),
-          // Chart dummy yang berubah sesuai tab aktif
           Container(
             height: 200,
             margin: const EdgeInsets.all(16),
@@ -96,7 +122,6 @@ class _ManajemenKesehatanScreenState extends State<ManajemenKesehatanScreen> {
               ),
             ),
           ),
-          // Tab filter
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
@@ -109,7 +134,7 @@ class _ManajemenKesehatanScreenState extends State<ManajemenKesehatanScreen> {
             ),
           ),
           const SizedBox(height: 16),
-          // List ringkasan mirip manajemen_ayam.dart style
+          // Ringkasan
           Expanded(
             child: ListView.builder(
               padding: const EdgeInsets.all(16),
@@ -132,9 +157,11 @@ class _ManajemenKesehatanScreenState extends State<ManajemenKesehatanScreen> {
         backgroundColor: Colors.green[700],
         onPressed: () {
           Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const TambahDataScreen()),
-          );
+      context,
+      MaterialPageRoute(
+        builder: (context) => const TambahDataScreen(jenisData: 'Kesehatan'),
+      ),
+    );  
         },
         child: const Icon(Icons.add, color: Colors.white),
       ),
@@ -169,6 +196,7 @@ class _RingkasanData {
   _RingkasanData(this.label, this.icon, this.jumlah, this.waktu, this.ringkasan);
 }
 
+// Komponen ringkasan
 class _RingkasanItem extends StatelessWidget {
   final String label;
   final IconData icon;
@@ -186,174 +214,137 @@ class _RingkasanItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
+    String jumlahText = '$jumlah ekor';
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        onTap: () {},
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.green.withAlpha(20),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.green.withAlpha(20),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
-          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-          margin: const EdgeInsets.symmetric(vertical: 6),
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              if (constraints.maxWidth < 350) {
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+        ],
+      ),
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+      margin: const EdgeInsets.symmetric(vertical: 6),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          if (constraints.maxWidth < 350) {
+            // Responsive kolom
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
                   children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Colors.green[100],
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Icon(icon, color: Colors.green[700], size: 28),
-                        ),
-                        const SizedBox(width: 8),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(label, style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 16)),
-                            const SizedBox(height: 4),
-                            Text(waktu, style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey)),
-                          ],
-                        ),
-                      ],
-                    ),
-                    const Divider(height: 18, thickness: 1),
-                    Center(
-                      child: Text(
-                        ringkasan,
-                        style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 14),
-                        textAlign: TextAlign.center,
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.green[100],
+                        borderRadius: BorderRadius.circular(8),
                       ),
+                      child: Icon(icon, color: Colors.green[700], size: 28),
                     ),
-                    const Divider(height: 18, thickness: 1),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    const SizedBox(width: 8),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Jumlah', style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 14)),
-                        Text('$jumlah', style: GoogleFonts.poppins(fontSize: 14)),
+                        Text(label, style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 16)),
+                        const SizedBox(height: 4),
+                        Text(waktu, style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey)),
                       ],
                     ),
                   ],
-                );
-              }
-              return Row(
-                children: [
-                  // Kiri (ikon + label + waktu)
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.green[100],
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(icon, color: Colors.green[700], size: 28),
+                ),
+                const Divider(height: 18, thickness: 1),
+               Center(
+                child: Text(
+                  ringkasan,
+                  style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 14),
+                  textAlign: TextAlign.center,
+                  // Tambahkan ini:
+                  softWrap: true,
+                  maxLines: 3, // atau boleh lebih besar sesuai kebutuhan
+                  overflow: TextOverflow.visible, // agar tidak dipotong
+                ),
+              ),
+                const Divider(height: 18, thickness: 1),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Jumlah', style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 14)),
+                    Text(jumlahText, style: GoogleFonts.poppins(fontSize: 14)),
+                  ],
+                ),
+              ],
+            );
+          }
+          return Row(
+            children: [
+              // Kiri (ikon + label + waktu)
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.green[100],
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(icon, color: Colors.green[700], size: 28),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                flex: 3,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(label, style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 16), overflow: TextOverflow.ellipsis),
+                    const SizedBox(height: 4),
+                    Text(waktu, style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey[700]), overflow: TextOverflow.ellipsis),
+                  ],
+                ),
+              ),
+              Container(
+                width: 1,
+                height: 40,
+                color: Colors.grey[400],
+                margin: const EdgeInsets.symmetric(horizontal: 6),
+              ),
+              // Tengah (ringkasan)
+              Expanded(
+                flex: 3,
+                child: Center(
+                  child: Text(
+                    ringkasan,
+                    style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 14),
+                    textAlign: TextAlign.center,
+                    softWrap: true,
+                    maxLines: 3,
+                    overflow: TextOverflow.visible,
                   ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    flex: 3,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(label, style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 16), overflow: TextOverflow.ellipsis),
-                        const SizedBox(height: 4),
-                        Text(waktu, style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey[700]), overflow: TextOverflow.ellipsis),
-                      ],
-                    ),
-                  ),
-                  // Garis vertikal
-                  Container(
-                    width: 1,
-                    height: 40,
-                    color: Colors.grey[400],
-                    margin: const EdgeInsets.symmetric(horizontal: 6),
-                  ),
-                  // Tengah (ringkasan)
-                  Expanded(
-                    flex: 3,
-                    child: Center(
-                      child: Text(
-                        ringkasan,
-                        style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 14),
-                        textAlign: TextAlign.center,
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 1,
-                      ),
-                    ),
-                  ),
-                  // Garis vertikal
-                  Container(
-                    width: 1,
-                    height: 40,
-                    color: Colors.grey[400],
-                    margin: const EdgeInsets.symmetric(horizontal: 6),
-                  ),
-                  // Kanan (jumlah)
-                  Expanded(
-                    flex: 2,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text('Jumlah', style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 14)),
-                        const SizedBox(height: 4),
-                        Text('$jumlah', style: GoogleFonts.poppins(fontSize: 14)),
-                      ],
-                    ),
-                  ),
-                ],
-              );
-            },
-          ),
-        ),
+                ),
+              ),
+              Container(
+                width: 1,
+                height: 40,
+                color: Colors.grey[400],
+                margin: const EdgeInsets.symmetric(horizontal: 6),
+              ),
+              // Kanan (jumlah)
+              Expanded(
+                flex: 2,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text('Jumlah', style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 14)),
+                    const SizedBox(height: 4),
+                    Text(jumlahText, style: GoogleFonts.poppins(fontSize: 14)),
+                  ],
+                ),
+              ),
+            ],
+          );
+        },
       ),
-    );
-  }
-}
-
-// Model ringkasan kesehatan
-class RingkasanKesehatan {
-  final int jumlah;
-  final String waktu;
-  final String ringkasan;
-  RingkasanKesehatan({
-    required this.jumlah,
-    required this.waktu,
-    required this.ringkasan,
-  });
-}
-
-// Fungsi untuk mengambil ringkasan kesehatan sesuai periode
-RingkasanKesehatan getRingkasanKesehatan(String periode) {
-  if (periode == 'Harian') {
-    return RingkasanKesehatan(
-      jumlah: 5,
-      waktu: '08:00 - 20 April',
-      ringkasan: 'Ayam sakit: 5 ekor',
-    );
-  } else if (periode == 'Mingguan') {
-    return RingkasanKesehatan(
-      jumlah: 35,
-      waktu: 'Minggu ini',
-      ringkasan: 'Ayam sakit: 35 ekor',
-    );
-  } else {
-    return RingkasanKesehatan(
-      jumlah: 150,
-      waktu: 'Bulan ini',
-      ringkasan: 'Ayam sakit: 150 ekor',
     );
   }
 }

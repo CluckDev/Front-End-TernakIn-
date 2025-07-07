@@ -4,18 +4,16 @@ import 'tambah_data_screen.dart';
 
 // List data ayam global (bisa diakses dari file lain)
 List<Ayam> ayamList = [
-  Ayam(nama: 'Ayam 1', umur: 12, jenis: 'Petelur'),
-  Ayam(nama: 'Ayam 2', umur: 10, jenis: 'Petelur'),
-  Ayam(nama: 'Ayam 3', umur: 8, jenis: 'Pedaging'),
-  Ayam(nama: 'Ayam 4', umur: 15, jenis: 'Pedaging'),
+  Ayam(jumlah: 1200, waktu: '20 April 2025', ringkasan: 'Masuk 1000, Keluar 200'),
+  Ayam(jumlah: 1500, waktu: '21 April 2025', ringkasan: 'Masuk 1500, Keluar 0'),
 ];
 
 // Contoh model Ayam
 class Ayam {
-  final String nama;
-  final int umur;
-  final String jenis;
-  Ayam({required this.nama, required this.umur, required this.jenis});
+  final int jumlah;
+  final String waktu;
+  final String ringkasan;
+  Ayam({required this.jumlah, required this.waktu, required this.ringkasan});
 }
 
 // Model ringkasan ayam
@@ -154,8 +152,10 @@ class _ManajemenAyamScreenState extends State<ManajemenAyamScreen> {
         onPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const TambahDataScreen()),
-          );
+          MaterialPageRoute(
+          builder: (context) => const TambahDataScreen(jenisData: 'Ayam'),
+        ),
+        );
         },
         child: const Icon(Icons.add, color: Colors.white),
       ),
@@ -209,140 +209,133 @@ class _RingkasanItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     String jumlahText = label == 'Pakan' ? '$jumlah kg' : '$jumlah';
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        onTap: () {},
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.green.withAlpha(20),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.green.withAlpha(20),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
-          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-          margin: const EdgeInsets.symmetric(vertical: 6),
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              if (constraints.maxWidth < 350) {
-                // Responsive kolom
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+        ],
+      ),
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+      margin: const EdgeInsets.symmetric(vertical: 6),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          if (constraints.maxWidth < 350) {
+            // Responsive kolom
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
                   children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Colors.green[100],
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Icon(icon, color: Colors.green[700], size: 28),
-                        ),
-                        const SizedBox(width: 8),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(label, style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 16)),
-                            const SizedBox(height: 4),
-                            Text(waktu, style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey)),
-                          ],
-                        ),
-                      ],
-                    ),
-                    const Divider(height: 18, thickness: 1),
-                    Center(
-                      child: Text(
-                        ringkasan,
-                        style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 14),
-                        textAlign: TextAlign.center,
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.green[100],
+                        borderRadius: BorderRadius.circular(8),
                       ),
+                      child: Icon(icon, color: Colors.green[700], size: 28),
                     ),
-                    const Divider(height: 18, thickness: 1),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    const SizedBox(width: 8),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Jumlah', style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 14)),
-                        Text(jumlahText, style: GoogleFonts.poppins(fontSize: 14)),
+                        Text(label, style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 16)),
+                        const SizedBox(height: 4),
+                        Text(waktu, style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey)),
                       ],
                     ),
                   ],
-                );
-              }
-              // Default tampilan baris
-              return Row(
-                children: [
-                  // Kiri (ikon + label + waktu)
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.green[100],
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(icon, color: Colors.green[700], size: 28),
+                ),
+                const Divider(height: 18, thickness: 1),
+                Center(
+                  child: Text(
+                    ringkasan,
+                    style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 14),
+                    textAlign: TextAlign.center,
                   ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    flex: 3,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(label, style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 16), overflow: TextOverflow.ellipsis),
-                        const SizedBox(height: 4),
-                        Text(waktu, style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey[700]), overflow: TextOverflow.ellipsis),
-                      ],
-                    ),
+                ),
+                const Divider(height: 18, thickness: 1),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Jumlah', style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 14)),
+                    Text(jumlahText, style: GoogleFonts.poppins(fontSize: 14)),
+                  ],
+                ),
+              ],
+            );
+          }
+          // Default tampilan baris
+          return Row(
+            children: [
+              // Kiri (ikon + label + waktu)
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.green[100],
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(icon, color: Colors.green[700], size: 28),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                flex: 3,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(label, style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 16), overflow: TextOverflow.ellipsis),
+                    const SizedBox(height: 4),
+                    Text(waktu, style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey[700]), overflow: TextOverflow.ellipsis),
+                  ],
+                ),
+              ),
+              // Garis vertikal
+              Container(
+                width: 1,
+                height: 40,
+                color: Colors.grey[400],
+                margin: const EdgeInsets.symmetric(horizontal: 6),
+              ),
+              // Tengah (ringkasan)
+              Expanded(
+                flex: 3,
+                child: Center(
+                  child: Text(
+                    ringkasan,
+                    style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 14),
+                    textAlign: TextAlign.center,
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
                   ),
-                  // Garis vertikal
-                  Container(
-                    width: 1,
-                    height: 40,
-                    color: Colors.grey[400],
-                    margin: const EdgeInsets.symmetric(horizontal: 6),
-                  ),
-                  // Tengah (ringkasan)
-                  Expanded(
-                    flex: 3,
-                    child: Center(
-                      child: Text(
-                        ringkasan,
-                        style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 14),
-                        textAlign: TextAlign.center,
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 1,
-                      ),
-                    ),
-                  ),
-                  // Garis vertikal
-                  Container(
-                    width: 1,
-                    height: 40,
-                    color: Colors.grey[400],
-                    margin: const EdgeInsets.symmetric(horizontal: 6),
-                  ),
-                  // Kanan (jumlah)
-                  Expanded(
-                    flex: 2,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text('Jumlah', style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 14)),
-                        const SizedBox(height: 4),
-                        Text(jumlahText, style: GoogleFonts.poppins(fontSize: 14)),
-                      ],
-                    ),
-                  ),
-                ],
-              );
-            },
-          ),
-        ),
+                ),
+              ),
+              // Garis vertikal
+              Container(
+                width: 1,
+                height: 40,
+                color: Colors.grey[400],
+                margin: const EdgeInsets.symmetric(horizontal: 6),
+              ),
+              // Kanan (jumlah)
+              Expanded(
+                flex: 2,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text('Jumlah', style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 14)),
+                    const SizedBox(height: 4),
+                    Text(jumlahText, style: GoogleFonts.poppins(fontSize: 14)),
+                  ],
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }

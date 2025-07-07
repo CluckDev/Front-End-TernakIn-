@@ -38,6 +38,7 @@ class _ManajemenPakanScreenState extends State<ManajemenPakanScreen> {
           color: Colors.white,
         ),
       ),
+// ...existing code...
       body: Column(
         children: [
           // Tampilkan total data pakan di sini
@@ -54,7 +55,7 @@ class _ManajemenPakanScreenState extends State<ManajemenPakanScreen> {
               ],
             ),
           ),
-          // Chart dummy yang berubah sesuai tab aktif
+          // Chart dummy/grafik
           Container(
             height: 200,
             margin: const EdgeInsets.all(16),
@@ -82,22 +83,20 @@ class _ManajemenPakanScreenState extends State<ManajemenPakanScreen> {
             ),
           ),
           const SizedBox(height: 16),
-          // List ringkasan dari data pakanList
+          // List ringkasan dari getRingkasanPakan sesuai tab aktif
           Expanded(
-            child: ListView.builder(
+            child: ListView(
               padding: const EdgeInsets.all(16),
-              itemCount: pakanList.length,
-              itemBuilder: (context, index) {
-                final data = pakanList[index];
-                return _RingkasanItem(
+              children: [
+                _RingkasanItem(
                   label: 'Pakan',
                   icon: Icons.rice_bowl,
-                  jumlah: data.jumlah,
+                  jumlah: getRingkasanPakan(activePeriod).jumlah,
                   satuan: 'kg',
-                  waktu: data.waktu,
-                  ringkasan: data.ringkasan,
-                );
-              },
+                  waktu: getRingkasanPakan(activePeriod).waktu,
+                  ringkasan: getRingkasanPakan(activePeriod).ringkasan,
+                ),
+              ],
             ),
           ),
         ],
@@ -106,9 +105,11 @@ class _ManajemenPakanScreenState extends State<ManajemenPakanScreen> {
         backgroundColor: Colors.green[700],
         onPressed: () {
           Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const TambahDataScreen()),
-          );
+      context,
+      MaterialPageRoute(
+        builder: (context) => const TambahDataScreen(jenisData: 'Pakan'),
+        ),
+        );
         },
         child: const Icon(Icons.add, color: Colors.white),
       ),
@@ -151,8 +152,20 @@ class _RingkasanItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.green.withAlpha(20),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+      margin: const EdgeInsets.symmetric(vertical: 6),
       child: LayoutBuilder(
         builder: (context, constraints) {
           if (constraints.maxWidth < 350) {
@@ -186,6 +199,10 @@ class _RingkasanItem extends StatelessWidget {
                     ringkasan,
                     style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 14),
                     textAlign: TextAlign.center,
+                    // Tambahkan ini:
+                    softWrap: true,
+                    maxLines: 3, // atau boleh lebih besar sesuai kebutuhan
+                    overflow: TextOverflow.visible, // agar tidak dipotong
                   ),
                 ),
                 const Divider(height: 18, thickness: 1),
@@ -199,10 +216,8 @@ class _RingkasanItem extends StatelessWidget {
               ],
             );
           }
-          // Default: tampilan baris (row) responsif
           return Row(
             children: [
-              // Kiri (ikon + label + waktu)
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
@@ -231,18 +246,19 @@ class _RingkasanItem extends StatelessWidget {
                 margin: const EdgeInsets.symmetric(horizontal: 6),
               ),
               // Tengah (ringkasan)
-              Expanded(
-                flex: 3,
-                child: Center(
-                  child: Text(
-                    ringkasan,
-                    style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 14),
-                    textAlign: TextAlign.center,
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 1,
-                  ),
+            Expanded(
+              flex: 3,
+              child: Center(
+                child: Text(
+                  ringkasan,
+                  style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 14),
+                  textAlign: TextAlign.center,
+                  softWrap: true,
+                  maxLines: 3,
+                  overflow: TextOverflow.visible,
                 ),
               ),
+            ),
               // Garis vertikal
               Container(
                 width: 1,
