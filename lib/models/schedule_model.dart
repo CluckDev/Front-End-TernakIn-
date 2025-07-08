@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart'; // Untuk @required
 
 class Schedule {
-  final int id; // ID sekarang adalah int
+  final int? id; // ID sekarang adalah int
   final String userId;
   final String? type; // Menggunakan String untuk type
   final String? description;
@@ -9,7 +9,7 @@ class Schedule {
   final DateTime? updatedAt;
 
   Schedule({
-    required this.id,
+    this.id,
     required this.userId,
     this.type,
     this.description,
@@ -35,14 +35,18 @@ class Schedule {
 
   // Metode untuk mengubah objek Schedule menjadi JSON (Map)
   Map<String, dynamic> toJson() {
-    return {
-      'id': id,
+    final Map<String, dynamic> jsonMap = {
       'user_id': userId,
       'type': type,
       'description': description,
       'created_at': createdAt?.toUtc().toIso8601String(),
       'updated_at': updatedAt?.toUtc().toIso8601String(),
     };
+    // Hanya sertakan 'id' jika tidak null (untuk operasi update)
+    if (id != null) {
+      jsonMap['id'] = id;
+    }
+    return jsonMap;
   }
 
   Schedule copyWith({

@@ -20,14 +20,17 @@ import 'services/supabase_services.dart'; // Pastikan path ini benar
 import 'services/data_summary_service.dart'; // Import DataSummaryService
 import 'package:flutter_dotenv/flutter_dotenv.dart'; // Import flutter_dotenv
 import 'package:supabase_flutter/supabase_flutter.dart'; // Import Supabase Flutter
+import 'package:intl/date_symbol_data_local.dart';
 
 // Deklarasikan supabaseService dan dataSummaryService sebagai late final
 late final SupabaseService supabaseService;
-late final DataSummaryService dataSummaryService; // Pastikan ini ada dan diinisialisasi!
+late final DataSummaryService
+    dataSummaryService; // Pastikan ini ada dan diinisialisasi!
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+  await initializeDateFormatting('id_ID', null);
 
   // PENTING: Muat file .env di sini SEBELUM mencoba mengakses variabelnya
   await dotenv.load(fileName: ".env");
@@ -44,7 +47,11 @@ void main() async {
 
   // Inisialisasi instance service SETELAH Supabase.initialize selesai
   supabaseService = SupabaseService();
-  dataSummaryService = DataSummaryService(); // Inisialisasi dataSummaryService di sini
+  dataSummaryService =
+      DataSummaryService(); // Inisialisasi dataSummaryService di sini
+  SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.light.copyWith(
+    statusBarIconBrightness: Brightness.dark, // Untuk Android (ikon terang)
+  ));
 
   runApp(const MyApp());
 }
@@ -59,7 +66,7 @@ class MyApp extends StatelessWidget {
       title: 'TernakIn',
       theme: ThemeData(
         primarySwatch: Colors.green,
-        scaffoldBackgroundColor: const Color(0xFFF8F9FA),
+        scaffoldBackgroundColor: const Color.fromARGB(255, 245, 246, 247),
         brightness: Brightness.light,
       ),
       initialRoute: '/',

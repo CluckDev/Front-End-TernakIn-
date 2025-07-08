@@ -1,16 +1,14 @@
-import 'package:flutter/foundation.dart'; // Untuk @required
-
 class Feed {
-  final int id; // ID sekarang adalah int
+  final int? id; // ID sekarang adalah int? (nullable)
   final String userId;
-  final String? status; // Menggunakan String untuk status 'in'/'out'
+  final String? status;
   final int? amount;
   final int? total;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
   Feed({
-    required this.id,
+    this.id, // Tidak lagi required
     required this.userId,
     this.status,
     this.amount,
@@ -19,10 +17,9 @@ class Feed {
     this.updatedAt,
   });
 
-  // Factory constructor untuk membuat objek Feed dari JSON (Map)
   factory Feed.fromJson(Map<String, dynamic> json) {
     return Feed(
-      id: json['id'] as int, // Parse sebagai int
+      id: json['id'] as int?,
       userId: json['user_id'] as String,
       status: json['status'] as String?,
       amount: json['amount'] as int?,
@@ -36,10 +33,8 @@ class Feed {
     );
   }
 
-  // Metode untuk mengubah objek Feed menjadi JSON (Map)
   Map<String, dynamic> toJson() {
-    return {
-      'id': id,
+    final Map<String, dynamic> data = {
       'user_id': userId,
       'status': status,
       'amount': amount,
@@ -47,10 +42,14 @@ class Feed {
       'created_at': createdAt?.toUtc().toIso8601String(),
       'updated_at': updatedAt?.toUtc().toIso8601String(),
     };
+    if (id != null) {
+      data['id'] = id;
+    }
+    return data;
   }
 
   Feed copyWith({
-    int? id, // ID di copyWith juga int
+    int? id,
     String? userId,
     String? status,
     int? amount,

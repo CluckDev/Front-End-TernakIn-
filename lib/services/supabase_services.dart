@@ -6,21 +6,19 @@ import '../models/egg_model.dart';
 import '../models/feed_model.dart';
 import '../models/schedule_model.dart';
 import '../models/sick_model.dart';
+
 final SupabaseService supabaseService = SupabaseService();
+
 class SupabaseService {
-  final SupabaseClient _supabaseClient = Supabase.instance.client;
-  final String _profilePicturesBucket =
-      'profile-pictures'; 
+  final String _profilePicturesBucket = 'profile-pictures';
 
   Future<String> uploadProfileImage({
     required File imageFile,
     required String userId,
   }) async {
     try {
-      final String fixedFileName =
-          'avatar';
-      final String pathInBucket =
-          '$userId/$fixedFileName'; 
+      final String fixedFileName = 'avatar';
+      final String pathInBucket = '$userId/$fixedFileName';
       // Gunakan metode 'upload' dengan 'upsert: true' untuk menimpa file jika sudah ada.
       // Ini akan secara otomatis mengganti gambar lama dengan nama file yang sama.
       final String uploadedPath = await Supabase.instance.client.storage
@@ -48,9 +46,9 @@ class SupabaseService {
     }
   }
 
-   // --- Metode CRUD untuk Model Data ---
+  // --- Metode CRUD untuk Model Data ---
 
- // Chickens
+  // Chickens
   Future<List<Chicken>> getChickens(String userId) async {
     final response = await Supabase.instance.client
         .from('chickens')
@@ -80,138 +78,220 @@ class SupabaseService {
   }
 
   Future<void> deleteChicken(int id) async {
-    await Supabase.instance.client.from('chickens').delete().eq('id', id as int); // Perbaikan di sini
+    await Supabase.instance.client
+        .from('chickens')
+        .delete()
+        .eq('id', id as int); // Perbaikan di sini
   }
 
   // Eggs
   Future<List<Egg>> getEggs(String userId) async {
-    final response = await Supabase.instance.client
-        .from('eggs')
-        .select()
-        .eq('user_id', userId)
-        .order('created_at', ascending: false);
-    return response.map((json) => Egg.fromJson(json)).toList();
+    try {
+      final response = await Supabase.instance.client
+          .from('eggs') // Nama tabel di Supabase
+          .select()
+          .eq('user_id', userId)
+          .order('created_at',
+              ascending: false); // Urutkan berdasarkan waktu terbaru
+
+      return response.map((json) => Egg.fromJson(json)).toList();
+    } catch (e) {
+      print('Error getting eggs: $e');
+      throw Exception('Gagal mendapatkan data telur: $e');
+    }
   }
 
-  Future<Egg> addEgg(Egg egg) async {
-    final response = await Supabase.instance.client
-        .from('eggs')
-        .insert(egg.toJson())
-        .select()
-        .single();
-    return Egg.fromJson(response);
+  Future<void> addEgg(Egg egg) async {
+    try {
+      // Supabase akan secara otomatis menetapkan ID jika tidak disertakan
+      // Pastikan toJson() tidak mengirim 'id' jika itu adalah kolom auto-increment
+      // atau biarkan model Egg.toJson() menangani itu.
+      await Supabase.instance.client.from('eggs').insert(egg.toJson());
+    } catch (e) {
+      print('Error adding egg: $e');
+      throw Exception('Gagal menambahkan data telur: $e');
+    }
   }
 
-  Future<Egg> updateEgg(Egg egg) async {
-    final response = await Supabase.instance.client
-        .from('eggs')
-        .update(egg.toJson())
-        .eq('id', egg.id as int) // Pastikan id adalah int
-        .select()
-        .single();
-    return Egg.fromJson(response);
+  Future<void> updateEgg(Egg egg) async {
+    try {
+      // Memastikan egg.id tidak null sebelum digunakan dalam query .eq
+      if (egg.id == null) {
+        throw Exception('Tidak dapat memperbarui telur tanpa ID.');
+      }
+      await Supabase.instance.client.from('eggs').update(egg.toJson()).eq(
+          'id', egg.id!); // Menggunakan operator ! untuk memastikan non-null
+    } catch (e) {
+      print('Error updating egg: $e');
+      throw Exception('Gagal memperbarui data telur: $e');
+    }
   }
 
   Future<void> deleteEgg(int id) async {
-    await Supabase.instance.client.from('eggs').delete().eq('id', id as int); // Perbaikan di sini
+    try {
+      await Supabase.instance.client
+          .from('eggs')
+          .delete()
+          .eq('id', id); // ID sudah int (non-nullable), jadi tidak perlu !
+    } catch (e) {
+      print('Error deleting egg: $e');
+      throw Exception('Gagal menghapus data telur: $e');
+    }
   }
 
-  // Feeds
-  Future<List<Feed>> getFeeds(String userId) async {
-    final response = await Supabase.instance.client
-        .from('feeds')
-        .select()
-        .eq('user_id', userId)
-        .order('created_at', ascending: false);
-    return response.map((json) => Feed.fromJson(json)).toList();
+// Feeds
+   Future<List<Feed>> getFeeds(String userId) async {
+    try {
+      final response = await Supabase.instance.client
+          .from('feeds') // Nama tabel di Supabase
+          .select()
+          .eq('user_id', userId)
+          .order('created_at', ascending: false); // Urutkan berdasarkan waktu terbaru
+
+      return response.map((json) => Feed.fromJson(json)).toList();
+    } catch (e) {
+      print('Error getting feeds: $e');
+      throw Exception('Gagal mendapatkan data pakan: $e');
+    }
   }
 
   Future<Feed> addFeed(Feed feed) async {
-    final response = await Supabase.instance.client
-        .from('feeds')
-        .insert(feed.toJson())
-        .select()
-        .single();
-    return Feed.fromJson(response);
+    try {
+      final response = await Supabase.instance.client.from('feeds').insert(feed.toJson()).select().single();
+      return Feed.fromJson(response);
+    } catch (e) {
+      print('Error adding feed: $e');
+      throw Exception('Gagal menambahkan data pakan: $e');
+    }
   }
 
   Future<Feed> updateFeed(Feed feed) async {
-    final response = await Supabase.instance.client
-        .from('feeds')
-        .update(feed.toJson())
-        .eq('id', feed.id as int) // Pastikan id adalah int
-        .select()
-        .single();
-    return Feed.fromJson(response);
+    try {
+      if (feed.id == null) {
+        throw Exception('Tidak dapat memperbarui pakan tanpa ID.');
+      }
+      final response = await Supabase.instance.client
+          .from('feeds')
+          .update(feed.toJson())
+          .eq('id', feed.id!)
+          .select()
+          .single();
+      return Feed.fromJson(response);
+    } catch (e) {
+      print('Error updating feed: $e');
+      throw Exception('Gagal memperbarui data pakan: $e');
+    }
   }
 
   Future<void> deleteFeed(int id) async {
-    await Supabase.instance.client.from('feeds').delete().eq('id', id as int); // Perbaikan di sini
+    try {
+      await Supabase.instance.client.from('feeds').delete().eq('id', id);
+    } catch (e) {
+      print('Error deleting feed: $e');
+      throw Exception('Gagal menghapus data pakan: $e');
+    }
   }
 
-  // Schedules
-  Future<List<Schedule>> getSchedules(String userId) async {
-    final response = await Supabase.instance.client
-        .from('schedule') // Nama tabel di database adalah 'schedule'
-        .select()
-        .eq('user_id', userId)
-        .order('created_at', ascending: false);
-    return response.map((json) => Schedule.fromJson(json)).toList();
+// Schedules
+   Future<List<Schedule>> getSchedules(String userId) async {
+    try {
+      final response = await Supabase.instance.client
+          .from('schedule') // Nama tabel di Supabase
+          .select()
+          .eq('user_id', userId)
+          .order('created_at', ascending: false); // Urutkan berdasarkan waktu terbaru
+
+      return response.map((json) => Schedule.fromJson(json)).toList();
+    } catch (e) {
+      print('Error getting schedules: $e');
+      throw Exception('Gagal mendapatkan data jadwal: $e');
+    }
   }
 
-  Future<Schedule> addSchedule(Schedule schedule) async {
-    final response = await Supabase.instance.client
-        .from('schedule')
-        .insert(schedule.toJson())
-        .select()
-        .single();
-    return Schedule.fromJson(response);
+  Future<void> addSchedule(Schedule schedule) async {
+    try {
+      // Supabase akan secara otomatis menetapkan ID jika tidak disertakan
+      await Supabase.instance.client.from('schedule').insert(schedule.toJson());
+    } catch (e) {
+      print('Error adding schedule: $e');
+      throw Exception('Gagal menambahkan data jadwal: $e');
+    }
   }
 
-  Future<Schedule> updateSchedule(Schedule schedule) async {
-    final response = await Supabase.instance.client
-        .from('schedule')
-        .update(schedule.toJson())
-        .eq('id', schedule.id as int) // Pastikan id adalah int
-        .select()
-        .single();
-    return Schedule.fromJson(response);
+  Future<void> updateSchedule(Schedule schedule) async {
+    try {
+      if (schedule.id == null) {
+        throw Exception('Tidak dapat memperbarui jadwal tanpa ID.');
+      }
+      await Supabase.instance.client
+          .from('schedule')
+          .update(schedule.toJson())
+          .eq('id', schedule.id!); // Perbarui berdasarkan ID jadwal
+    } catch (e) {
+      print('Error updating schedule: $e');
+      throw Exception('Gagal memperbarui data jadwal: $e');
+    }
   }
 
   Future<void> deleteSchedule(int id) async {
-    await Supabase.instance.client.from('schedule').delete().eq('id', id as int); // Perbaikan di sini
+    try {
+      await Supabase.instance.client.from('schedule').delete().eq('id', id); // Hapus berdasarkan ID jadwal
+    } catch (e) {
+      print('Error deleting schedule: $e');
+      throw Exception('Gagal menghapus data jadwal: $e');
+    }
   }
 
-  // Sick
-  Future<List<Sick>> getSickRecords(String userId) async {
-    final response = await Supabase.instance.client
-        .from('sick') // Nama tabel di database adalah 'sick'
-        .select()
-        .eq('user_id', userId)
-        .order('created_at', ascending: false);
-    return response.map((json) => Sick.fromJson(json)).toList();
+// Sick
+   Future<List<Sick>> getSicks(String userId) async {
+    try {
+      final response = await Supabase.instance.client
+          .from('sick') // Nama tabel di Supabase
+          .select()
+          .eq('user_id', userId)
+          .order('created_at', ascending: false); // Urutkan berdasarkan waktu terbaru
+
+      return response.map((json) => Sick.fromJson(json)).toList();
+    } catch (e) {
+      print('Error getting sicks: $e');
+      throw Exception('Gagal mendapatkan data kesehatan: $e');
+    }
   }
 
   Future<Sick> addSick(Sick sick) async {
-    final response = await Supabase.instance.client
-        .from('sick')
-        .insert(sick.toJson())
-        .select()
-        .single();
-    return Sick.fromJson(response);
+    try {
+      final response = await Supabase.instance.client.from('sick').insert(sick.toJson()).select().single();
+      return Sick.fromJson(response);
+    } catch (e) {
+      print('Error adding sick: $e');
+      throw Exception('Gagal menambahkan data kesehatan: $e');
+    }
   }
 
   Future<Sick> updateSick(Sick sick) async {
-    final response = await Supabase.instance.client
-        .from('sick')
-        .update(sick.toJson())
-        .eq('id', sick.id as int) // Pastikan id adalah int
-        .select()
-        .single();
-    return Sick.fromJson(response);
+    try {
+      if (sick.id == null) {
+        throw Exception('Tidak dapat memperbarui data kesehatan tanpa ID.');
+      }
+      final response = await Supabase.instance.client
+          .from('sick')
+          .update(sick.toJson())
+          .eq('id', sick.id!)
+          .select()
+          .single();
+      return Sick.fromJson(response);
+    } catch (e) {
+      print('Error updating sick: $e');
+      throw Exception('Gagal memperbarui data kesehatan: $e');
+    }
   }
 
   Future<void> deleteSick(int id) async {
-    await Supabase.instance.client.from('sick').delete().eq('id', id as int); // Perbaikan di sini
+    try {
+      await Supabase.instance.client.from('sick').delete().eq('id', id);
+    } catch (e) {
+      print('Error deleting sick: $e');
+      throw Exception('Gagal menghapus data kesehatan: $e');
+    }
   }
 }
