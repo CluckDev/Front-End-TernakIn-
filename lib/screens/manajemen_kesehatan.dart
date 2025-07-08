@@ -2,22 +2,31 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'tambah_data_screen.dart';
 
+// Dummy Data
 List<KesehatanAyam> kesehatanList = [
   KesehatanAyam(tanggal: '20 April', kasus: 'Flu', jumlah: 2),
   KesehatanAyam(tanggal: '21 April', kasus: 'Cacingan', jumlah: 1),
 ];
 
+// Model Data
 class KesehatanAyam {
   final String tanggal;
   final String kasus;
   final int jumlah;
-  KesehatanAyam({required this.tanggal, required this.kasus, required this.jumlah});
+
+  KesehatanAyam({
+    required this.tanggal,
+    required this.kasus,
+    required this.jumlah,
+  });
 }
 
+// Model Ringkasan
 class RingkasanKesehatan {
   final int jumlah;
   final String waktu;
   final String ringkasan;
+
   RingkasanKesehatan({
     required this.jumlah,
     required this.waktu,
@@ -25,16 +34,30 @@ class RingkasanKesehatan {
   });
 }
 
+// Fungsi ringkasan
 RingkasanKesehatan getRingkasanKesehatan(String periode) {
   if (periode == 'Harian') {
-    return RingkasanKesehatan(jumlah: 5, waktu: '08:00 - 20 April', ringkasan: 'Ayam sakit: 5');
+    return RingkasanKesehatan(
+      jumlah: 5,
+      waktu: '08:00 - 20 April',
+      ringkasan: 'Ayam sakit 5 ekor',
+    );
   } else if (periode == 'Mingguan') {
-    return RingkasanKesehatan(jumlah: 35, waktu: 'Minggu ini', ringkasan: 'Ayam sakit: 35');
+    return RingkasanKesehatan(
+      jumlah: 12,
+      waktu: 'Minggu ini',
+      ringkasan: 'Ayam sakit 12 ekor',
+    );
   } else {
-    return RingkasanKesehatan(jumlah: 150, waktu: 'Bulan ini', ringkasan: 'Ayam sakit: 150');
+    return RingkasanKesehatan(
+      jumlah: 30,
+      waktu: 'Bulan ini',
+      ringkasan: 'Ayam sakit 30 ekor',
+    );
   }
 }
 
+// UI
 class ManajemenKesehatanScreen extends StatefulWidget {
   const ManajemenKesehatanScreen({super.key});
 
@@ -47,7 +70,7 @@ class _ManajemenKesehatanScreenState extends State<ManajemenKesehatanScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final RingkasanKesehatan data = getRingkasanKesehatan(activePeriod);
+    final data = getRingkasanKesehatan(activePeriod);
 
     return Scaffold(
       appBar: AppBar(
@@ -65,7 +88,7 @@ class _ManajemenKesehatanScreenState extends State<ManajemenKesehatanScreen> {
       ),
       body: Column(
         children: [
-          // Total Data Kesehatan
+          // Total Data
           Container(
             margin: const EdgeInsets.all(16),
             padding: const EdgeInsets.all(16),
@@ -94,7 +117,7 @@ class _ManajemenKesehatanScreenState extends State<ManajemenKesehatanScreen> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Total Kasus',
+                    Text('Total Kesehatan',
                         style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey[700])),
                     Text('${kesehatanList.length}',
                         style: GoogleFonts.poppins(
@@ -108,7 +131,7 @@ class _ManajemenKesehatanScreenState extends State<ManajemenKesehatanScreen> {
             ),
           ),
 
-          // Filter Tab
+          // Tab Filter
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
@@ -123,7 +146,7 @@ class _ManajemenKesehatanScreenState extends State<ManajemenKesehatanScreen> {
 
           const SizedBox(height: 12),
 
-          // Ringkasan Item
+          // Ringkasan
           Expanded(
             child: ListView(
               padding: const EdgeInsets.all(16),
@@ -132,6 +155,7 @@ class _ManajemenKesehatanScreenState extends State<ManajemenKesehatanScreen> {
                   label: 'Kesehatan',
                   icon: Icons.health_and_safety,
                   jumlah: data.jumlah,
+                  satuan: 'ekor',
                   waktu: data.waktu,
                   ringkasan: data.ringkasan,
                 ),
@@ -140,8 +164,6 @@ class _ManajemenKesehatanScreenState extends State<ManajemenKesehatanScreen> {
           ),
         ],
       ),
-
-      // FAB Tambah
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.green[700],
         onPressed: () {
@@ -171,11 +193,12 @@ class _ManajemenKesehatanScreenState extends State<ManajemenKesehatanScreen> {
   }
 }
 
-// Komponen Ringkasan
+// Komponen Ringkasan Kesehatan
 class _RingkasanItem extends StatelessWidget {
   final String label;
   final IconData icon;
   final int jumlah;
+  final String satuan;
   final String waktu;
   final String ringkasan;
 
@@ -183,6 +206,7 @@ class _RingkasanItem extends StatelessWidget {
     required this.label,
     required this.icon,
     required this.jumlah,
+    required this.satuan,
     required this.waktu,
     required this.ringkasan,
   });
@@ -206,7 +230,7 @@ class _RingkasanItem extends StatelessWidget {
       child: IntrinsicHeight(
         child: Row(
           children: [
-            // Kolom 1 - Label dan Waktu
+            // Kolom 1
             Expanded(
               flex: 2,
               child: Column(
@@ -234,14 +258,14 @@ class _RingkasanItem extends StatelessWidget {
             // Garis Vertikal
             Container(width: 1, color: Colors.grey[300], margin: const EdgeInsets.symmetric(horizontal: 8)),
 
-            // Kolom 2 - Jumlah sakit
+            // Kolom 2
             Expanded(
               flex: 2,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Text(
-                    'Sakit',
+                    'Detail',
                     style: GoogleFonts.poppins(
                       fontWeight: FontWeight.bold,
                       fontSize: 14,
@@ -249,8 +273,9 @@ class _RingkasanItem extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '${ringkasan.replaceAll('Ayam sakit:', '').trim()} ekor',
+                    ringkasan,
                     style: GoogleFonts.poppins(fontSize: 13),
+                    textAlign: TextAlign.center,
                   ),
                 ],
               ),
@@ -259,7 +284,7 @@ class _RingkasanItem extends StatelessWidget {
             // Garis Vertikal
             Container(width: 1, color: Colors.grey[300], margin: const EdgeInsets.symmetric(horizontal: 8)),
 
-            // Kolom 3 - Jumlah Total
+            // Kolom 3
             Expanded(
               flex: 1,
               child: Column(
@@ -274,7 +299,7 @@ class _RingkasanItem extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '$jumlah',
+                    '$jumlah $satuan',
                     style: GoogleFonts.poppins(fontSize: 14),
                   ),
                 ],

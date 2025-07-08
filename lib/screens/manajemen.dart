@@ -5,6 +5,28 @@ import 'manajemen_telur.dart';
 import 'manajemen_pakan.dart';
 import 'manajemen_kesehatan.dart';
 
+class RingkasanKesehatan {
+  final int jumlah;
+  final String waktu;
+  final String ringkasan;
+
+  RingkasanKesehatan({
+    required this.jumlah,
+    required this.waktu,
+    required this.ringkasan,
+  });
+}
+
+RingkasanKesehatan getRingkasanKesehatan(String periode) {
+  if (periode == 'Harian') {
+    return RingkasanKesehatan(jumlah: 2, waktu: 'Hari ini', ringkasan: 'Ayam sakit: 2');
+  } else if (periode == 'Mingguan') {
+    return RingkasanKesehatan(jumlah: 8, waktu: 'Minggu ini', ringkasan: 'Ayam sakit: 8');
+  } else {
+    return RingkasanKesehatan(jumlah: 20, waktu: 'Bulan ini', ringkasan: 'Ayam sakit: 20');
+  }
+}
+
 class ManajemenScreen extends StatefulWidget {
   const ManajemenScreen({super.key});
 
@@ -56,7 +78,7 @@ class _ManajemenScreenState extends State<ManajemenScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Manajemen'),
-        backgroundColor: Colors.green,
+        backgroundColor: Colors.green[700],
         titleTextStyle: GoogleFonts.poppins(
           fontSize: 20,
           fontWeight: FontWeight.bold,

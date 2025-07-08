@@ -9,6 +9,7 @@ environment:
   flutter: ">= 3.0.0 <3.32.0"
 
 dependencies:
+  intl: ^0.18.1
   flutter:
     sdk: flutter
   fl_chart: ^0.64.0
