@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:ternakin/services/auth_services.dart';
+import 'package:ternakin/services/data_summary_service.dart'; // Import DataSummaryService
 import '../widgets/bottom_navbar.dart';
 import 'dashboard_chart.dart';
 import 'jadwal.dart';
@@ -11,8 +12,12 @@ import 'manajemen_pakan.dart';
 import 'manajemen_telur.dart';
 import 'profile.dart';
 import 'statistik_screen.dart';
-import 'data_summary_service.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
+
+// Karena dataSummaryService sekarang diinisialisasi sebagai late final di main.dart,
+// kita bisa mengaksesnya secara global setelah main.dart selesai inisialisasi.
+// Namun, untuk robusta, kita akan meneruskannya sebagai parameter ke DashboardContent.
+import '../main.dart'; // Import main.dart untuk mengakses dataSummaryService global
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -46,6 +51,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   void _loadUserProfile(fb_auth.User? user) {
+    if (!mounted) return; // Tambahkan pemeriksaan mounted di sini
     setState(() {
       if (user != null) {
         _userName = user.displayName ?? 'Pengguna';
@@ -67,17 +73,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     // Bangun DashboardContent di sini agar selalu menggunakan _userName dan _photoUrl terbaru
     final List<Widget> currentPage = [
-      DashboardContent(userName: _userName, photoUrl: _photoUrl),
-      JadwalScreen(),
-      ManajemenScreen(),
-      ProfilScreen(),
+      // Teruskan instance dataSummaryService ke DashboardContent
+      DashboardContent(userName: _userName, photoUrl: _photoUrl, dataSummaryService: dataSummaryService),
+      const JadwalScreen(), // Pastikan JadwalScreen juga const jika tidak ada state
+      const ManajemenScreen(),
+      const ProfilScreen(),
     ];
 
     return Scaffold(
       body: SafeArea(child: currentPage[_selectedIndex]), // Gunakan currentPage
       bottomNavigationBar: BottomNavBar(
         currentIndex: _selectedIndex,
-        onTap: _onTap,
+        onTap: (index) {
+          _onTap(index);
+          // Jika kembali ke tab Dashboard (index 0) setelah perubahan, muat ulang profil
+          if (index == 0) {
+            _loadUserProfile(authService.currentUser); // Panggil dengan user saat ini
+          }
+        },
       ),
     );
   }
@@ -86,7 +99,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
 class DashboardContent extends StatefulWidget {
   final String userName;
   final String? photoUrl; // Tambahkan properti photoUrl
-  const DashboardContent({super.key, required this.userName, this.photoUrl});
+  final DataSummaryService dataSummaryService; // Tambahkan parameter ini
+
+  const DashboardContent({
+    super.key,
+    required this.userName,
+    this.photoUrl,
+    required this.dataSummaryService, // Tandai sebagai required
+  });
 
   @override
   State<DashboardContent> createState() => _DashboardContentState();
@@ -94,6 +114,14 @@ class DashboardContent extends StatefulWidget {
 
 class _DashboardContentState extends State<DashboardContent> {
   String selectedChart = 'telur';
+  Map<String, int> _summaryTotals = {
+    'Ayam': 0,
+    'Telur': 0,
+    'Pakan': 0,
+    'Sakit': 0, // Menggunakan 'Sakit' agar konsisten dengan label di UI
+  };
+  bool _isLoadingSummary = true;
+  String? _summaryErrorMessage;
 
   final Map<String, String> chartLabels = {
     'telur': 'Grafik Produksi Telur',
@@ -110,7 +138,69 @@ class _DashboardContentState extends State<DashboardContent> {
   };
 
   @override
+  void initState() {
+    super.initState();
+    _fetchSummaryData(); // Muat data ringkasan saat inisialisasi DashboardContent
+  }
+
+  Future<void> _fetchSummaryData() async {
+    if (!mounted) return; // Tambahkan pemeriksaan mounted di awal fungsi
+    setState(() {
+      _isLoadingSummary = true;
+      _summaryErrorMessage = null;
+    });
+
+    final userId = authService.currentUser?.uid;
+    if (userId == null) {
+      if (!mounted) return; // Pemeriksaan mounted sebelum setState
+      setState(() {
+        _summaryErrorMessage = 'Pengguna tidak login.';
+        _isLoadingSummary = false;
+      });
+      return;
+    }
+
+    try {
+      final totalAyam = await widget.dataSummaryService.getTotalChickens(userId, 'Bulanan');
+      final totalTelur = await widget.dataSummaryService.getTotalEggs(userId, 'Bulanan');
+      final totalPakan = await widget.dataSummaryService.getTotalFeeds(userId, 'Bulanan');
+      final totalSakit = await widget.dataSummaryService.getTotalSick(userId, 'Bulanan');
+
+      if (!mounted) return; // Pemeriksaan mounted sebelum setState
+      setState(() {
+        _summaryTotals = {
+          'Ayam': totalAyam,
+          'Telur': totalTelur,
+          'Pakan': totalPakan,
+          'Sakit': totalSakit,
+        };
+      });
+    } catch (e) {
+      if (!mounted) return; // Pemeriksaan mounted sebelum setState
+      setState(() {
+        _summaryErrorMessage = 'Gagal memuat data ringkasan: $e';
+        debugPrint('Error fetching summary data for DashboardContent: $e');
+      });
+    } finally {
+      if (mounted) { // Pemeriksaan mounted di blok finally
+        setState(() {
+          _isLoadingSummary = false;
+        });
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final double basePadding = screenWidth * 0.04; // 4% dari lebar layar sebagai padding dasar
+    final double smallSpacing = screenWidth * 0.02; // 2% untuk spasi kecil
+    final double mediumSpacing = screenWidth * 0.04; // 4% untuk spasi sedang
+
+    // Radius avatar responsif
+    final double logoAvatarRadius = screenWidth * 0.07; // Radius logo
+    final double profileAvatarRadius = screenWidth * 0.06; // Radius profil
+
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -119,7 +209,7 @@ class _DashboardContentState extends State<DashboardContent> {
           Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [Colors.green.shade700, Colors.green.shade400],
+                colors: [Colors.green.shade700!, Colors.green.shade400!],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -129,85 +219,102 @@ class _DashboardContentState extends State<DashboardContent> {
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.green.withAlpha((0.2 * 255).toInt()),
+                  color: Colors.green.withOpacity(0.2),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
                 ),
               ],
             ),
-            padding: const EdgeInsets.fromLTRB(16, 48, 16, 32),
+            // Padding responsif untuk Container header
+            padding: EdgeInsets.fromLTRB(basePadding, 48, basePadding, 32),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  children: [
-                    // Logo aplikasi
-                    CircleAvatar(
-                      radius: 28,
-                      backgroundColor: Colors.white,
-                      backgroundImage: AssetImage('assets/images/logo.png'),
-                    ),
-                    const SizedBox(width: 12),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Selamat datang di aplikasi kami',
-                          style: GoogleFonts.poppins(
-                            fontSize: 14,
-                            color: Colors.white70,
-                          ),
-                        ),
-                        Text(
-                          'Ternakin',
-                          style: GoogleFonts.poppins(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                        Text(
-                          'Manajemen Peternakan',
-                          style: GoogleFonts.poppins(
-                            fontSize: 13,
-                            color: Colors.white70,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                // Bagian Kiri: Logo Aplikasi dan Teks Selamat Datang
+                CircleAvatar(
+                  radius: logoAvatarRadius, // Radius responsif
+                  backgroundColor: Colors.white,
+                  backgroundImage: const AssetImage('assets/images/logo.png'),
                 ),
-                // Profil user (bisa diklik ke halaman profil)
+                SizedBox(width: smallSpacing), // Spasi responsif
+
+                Expanded( // Expanded untuk Column teks agar mengambil sisa ruang
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Selamat datang di aplikasi kami',
+                        style: GoogleFonts.poppins(
+                          fontSize: 14, // Ukuran font tetap
+                          color: Colors.white70,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        'Ternakin',
+                        style: GoogleFonts.poppins(
+                          fontSize: 20, // Ukuran font tetap
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        'Manajemen Peternakan',
+                        style: GoogleFonts.poppins(
+                          fontSize: 13, // Ukuran font tetap
+                          color: Colors.white70,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+
+                const Spacer(), // Mendorong elemen ke ujung kanan
+
+                // Bagian Kanan: Profil user
                 GestureDetector(
                   onTap: () {
-                    Navigator.push(context,
-                        MaterialPageRoute(builder: (_) => ProfilScreen()));
+                    // Ketika menavigasi ke ProfilScreen, kita ingin tahu kapan kembali
+                    // agar bisa memuat ulang data profil jika ada perubahan.
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => const ProfilScreen()))
+                        .then((_) {
+                      // Setelah kembali dari ProfilScreen, muat ulang data pengguna
+                      // Ini akan memicu setState di DashboardScreen dan memperbarui DashboardContent
+                      final _DashboardScreenState? dashboardState = context.findAncestorStateOfType<_DashboardScreenState>();
+                      dashboardState?._loadUserProfile(authService.currentUser); // Panggil dengan user saat ini
+                    });
                   },
                   child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       CircleAvatar(
-                        radius: 24,
+                        radius: profileAvatarRadius, // Radius responsif
                         backgroundColor: Colors.white,
-                        backgroundImage: widget.photoUrl != null &&
-                                widget.photoUrl!.isNotEmpty
-                            ? NetworkImage(widget.photoUrl!)
-                                as ImageProvider<Object>?
-                            : const AssetImage('assets/images/logo.png'),
+                        // Gunakan photoUrl dari widget jika tersedia, jika tidak gunakan aset default
+                        backgroundImage: widget.photoUrl != null && widget.photoUrl!.isNotEmpty
+                            ? NetworkImage(widget.photoUrl!) as ImageProvider<Object>?
+                            : const AssetImage('assets/images/cipaaa.png'),
                         // Jika tidak ada gambar, tampilkan ikon default
-                        child:
-                            widget.photoUrl == null || widget.photoUrl!.isEmpty
-                                ? Icon(Icons.person, color: Colors.green[700])
-                                : null,
+                        child: widget.photoUrl == null || widget.photoUrl!.isEmpty
+                            ? Icon(Icons.person, color: Colors.green[700], size: profileAvatarRadius * 1.5)
+                            : null,
                       ),
-                      const SizedBox(height: 4),
+                      SizedBox(height: screenWidth * 0.01), // Spasi responsif
                       Text(
                         widget.userName,
                         style: GoogleFonts.poppins(
-                          fontSize: 13,
+                          fontSize: 13, // Ukuran font tetap
                           color: Colors.white,
                           fontWeight: FontWeight.w600,
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),
@@ -215,70 +322,73 @@ class _DashboardContentState extends State<DashboardContent> {
               ],
             ),
           ),
-          const SizedBox(height: 24),
+          SizedBox(height: mediumSpacing), // Spasi responsif
+
           // Summary cards
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                SummaryCard(
-                  label: 'Telur',
-                  value: DataSummaryService.getTotalTelur().toString(),
-                  icon: Icons.egg,
-                  onTap: () {
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (_) => ManajemenTelurScreen()));
-                  },
-                ),
-                SummaryCard(
-                  label: 'Ayam',
-                  value: DataSummaryService.getTotalAyam().toString(),
-                  icon: Icons.pets,
-                  onTap: () {
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (_) => ManajemenAyamScreen()));
-                  },
-                ),
-                SummaryCard(
-                  label: 'Pakan',
-                  value: DataSummaryService.getTotalPakan().toString(),
-                  icon: Icons.rice_bowl,
-                  onTap: () {
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (_) => ManajemenPakanScreen()));
-                  },
-                ),
-                SummaryCard(
-                  label: 'Sakit',
-                  value: DataSummaryService.getTotalSakit().toString(),
-                  icon: Icons.warning,
-                  onTap: () {
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (_) => ManajemenKesehatanScreen()));
-                  },
-                ),
-              ],
+            padding: EdgeInsets.symmetric(horizontal: basePadding), // Padding responsif
+            child: LayoutBuilder( // Gunakan LayoutBuilder untuk responsivitas kartu
+              builder: (context, constraints) {
+                // Tentukan jumlah kolom berdasarkan lebar yang tersedia
+                int crossAxisCount = (constraints.maxWidth / (120 + smallSpacing * 2)).floor(); // Estimasi lebar kartu + spasi
+                if (crossAxisCount < 2) crossAxisCount = 2; // Minimal 2 kolom
+                if (crossAxisCount > 4) crossAxisCount = 4; // Maksimal 4 kolom
+
+                return GridView.count(
+                  shrinkWrap: true, // Penting agar GridView tidak mengambil tinggi tak terbatas
+                  physics: const NeverScrollableScrollPhysics(), // Nonaktifkan scroll GridView
+                  crossAxisCount: crossAxisCount,
+                  crossAxisSpacing: smallSpacing, // Spasi horizontal responsif
+                  mainAxisSpacing: smallSpacing, // Spasi vertikal responsif
+                  childAspectRatio: 0.9, // Rasio aspek kartu (width / height)
+                  children: [
+                    SummaryCard(
+                      label: 'Telur',
+                      value: _summaryTotals['Telur']!.toString(),
+                      icon: Icons.egg,
+                      onTap: () {
+                        Navigator.push(context, MaterialPageRoute(builder: (_) => const ManajemenTelurScreen()));
+                      },
+                    ),
+                    SummaryCard(
+                      label: 'Ayam',
+                      value: _summaryTotals['Ayam']!.toString(),
+                      icon: Icons.pets,
+                      onTap: () {
+                        Navigator.push(context, MaterialPageRoute(builder: (_) => const ManajemenAyamScreen()));
+                      },
+                    ),
+                    SummaryCard(
+                      label: 'Pakan',
+                      value: _summaryTotals['Pakan']!.toString(),
+                      icon: Icons.rice_bowl,
+                      onTap: () {
+                        Navigator.push(context, MaterialPageRoute(builder: (_) => const ManajemenPakanScreen()));
+                      },
+                    ),
+                    SummaryCard(
+                      label: 'Sakit',
+                      value: _summaryTotals['Sakit']!.toString(),
+                      icon: Icons.warning,
+                      onTap: () {
+                        Navigator.push(context, MaterialPageRoute(builder: (_) => const ManajemenKesehatanScreen()));
+                      },
+                    ),
+                  ],
+                );
+              },
             ),
           ),
-          const SizedBox(height: 24),
+          SizedBox(height: mediumSpacing), // Spasi responsif
+
           // Grafik utama dengan dropdown
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: EdgeInsets.symmetric(horizontal: basePadding), // Padding responsif
             child: Card(
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               elevation: 3,
               child: Padding(
-                padding: const EdgeInsets.all(16),
+                padding: EdgeInsets.all(basePadding), // Padding responsif
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -289,25 +399,23 @@ class _DashboardContentState extends State<DashboardContent> {
                             color: Colors.brown[100],
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          padding: const EdgeInsets.all(8),
+                          padding: EdgeInsets.all(smallSpacing), // Padding responsif
                           child: Icon(chartIcons[selectedChart],
-                              color: Colors.green[700], size: 22),
+                              color: Colors.green[700], size: screenWidth * 0.06), // Ukuran ikon responsif
                         ),
-                        const SizedBox(width: 10),
-                        // Ganti Expanded dengan Flexible agar lebih adaptif
-                        Flexible(
+                        SizedBox(width: smallSpacing), // Spasi responsif
+                        Expanded( // Gunakan Expanded untuk teks judul grafik
                           child: Text(
                             chartLabels[selectedChart]!,
                             style: GoogleFonts.poppins(
-                              fontSize: 16,
+                              fontSize: 16, // Ukuran font tetap
                               fontWeight: FontWeight.bold,
                             ),
-                            overflow:
-                                TextOverflow.ellipsis, // Supaya tidak menumpuk
+                            overflow: TextOverflow.ellipsis,
                             maxLines: 1,
                           ),
                         ),
-                        const SizedBox(width: 8),
+                        SizedBox(width: smallSpacing), // Spasi responsif
                         DropdownButton<String>(
                           value: selectedChart,
                           isDense: true,
@@ -317,22 +425,19 @@ class _DashboardContentState extends State<DashboardContent> {
                             return DropdownMenuItem<String>(
                               value: entry.key,
                               child: Text(entry.value,
-                                  style: GoogleFonts.poppins(fontSize: 14)),
+                                  style: GoogleFonts.poppins(fontSize: 14)), // Ukuran font tetap
                             );
                           }).toList(),
                           onChanged: (val) {
-                            if (val != null) {
-                              setState(() => selectedChart = val);
-                              }
+                            if (val != null) setState(() => selectedChart = val);
                           },
                         ),
                       ],
                     ),
-                    const SizedBox(height: 12),
+                    SizedBox(height: mediumSpacing), // Spasi responsif
                     SizedBox(
-                      height: 220,
-                      child:
-                          DashboardChart(period: 'daily', type: selectedChart),
+                      height: screenWidth * 0.6, // Tinggi grafik responsif (misal 60% dari lebar layar)
+                      child: DashboardChart(period: 'daily', type: selectedChart),
                     ),
                   ],
                 ),
@@ -342,36 +447,34 @@ class _DashboardContentState extends State<DashboardContent> {
           const SizedBox(height: 24),
           // Aktivitas terakhir (dummy)
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: EdgeInsets.symmetric(horizontal: basePadding), // Padding responsif
             child: Text(
               'Aktivitas Terakhir',
               style: GoogleFonts.poppins(
-                  fontSize: 16, fontWeight: FontWeight.bold),
+                  fontSize: 16, fontWeight: FontWeight.bold), // Ukuran font tetap
             ),
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: EdgeInsets.symmetric(horizontal: basePadding, vertical: smallSpacing), // Padding responsif
             child: Card(
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               child: ListTile(
-                leading: Icon(Icons.add, color: Colors.green[700]),
+                leading: Icon(Icons.add, color: Colors.green[700], size: screenWidth * 0.06), // Ukuran ikon responsif
                 title: Text('Tambah data ayam',
-                    style: GoogleFonts.poppins(fontSize: 14)),
+                    style: GoogleFonts.poppins(fontSize: 14)), // Ukuran font tetap
                 subtitle: Text('Hari ini, 08:00',
-                    style: GoogleFonts.poppins(fontSize: 12)),
+                    style: GoogleFonts.poppins(fontSize: 12)), // Ukuran font tetap
               ),
             ),
           ),
           // Tombol ke statistik detail
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: EdgeInsets.symmetric(horizontal: basePadding, vertical: mediumSpacing), // Padding responsif
             child: ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.green[700],
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
-                minimumSize: const Size.fromHeight(48),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                minimumSize: Size.fromHeight(screenWidth * 0.12), // Tinggi tombol responsif
               ),
               onPressed: () {
                 Navigator.push(
@@ -379,15 +482,15 @@ class _DashboardContentState extends State<DashboardContent> {
                   MaterialPageRoute(builder: (_) => const StatistikScreen()),
                 );
               },
-              icon: const Icon(Icons.bar_chart, color: Colors.white),
+              icon: Icon(Icons.bar_chart, color: Colors.white, size: screenWidth * 0.06), // Ukuran ikon responsif
               label: Text(
                 'Lihat Statistik Lengkap',
                 style: GoogleFonts.poppins(
-                    color: Colors.white, fontWeight: FontWeight.bold),
+                    color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16), // Ukuran font tetap
               ),
             ),
           ),
-          const SizedBox(height: 32),
+          SizedBox(height: mediumSpacing), // Spasi responsif
         ],
       ),
     );
@@ -410,28 +513,39 @@ class SummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Ukuran ikon kartu juga bisa responsif
+    final screenWidth = MediaQuery.of(context).size.width;
+    final double cardIconSize = screenWidth * 0.08; // Contoh: 8% dari lebar layar
+
     final cardContent = Padding(
       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 18),
       child: Column(
+        mainAxisSize: MainAxisSize.min, // Penting untuk kartu
         children: [
-          Icon(icon, color: Colors.green[700], size: 32),
+          Icon(icon, color: Colors.green[700], size: cardIconSize), // Ukuran ikon responsif
           const SizedBox(height: 8),
           Text(
             label,
             style: GoogleFonts.poppins(
-              fontSize: 14,
+              fontSize: 14, // Ukuran font tetap
               fontWeight: FontWeight.w600,
               color: Colors.green[900],
             ),
+            textAlign: TextAlign.center, // Pusatkan teks
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: 4),
           Text(
             value,
             style: GoogleFonts.poppins(
-              fontSize: 18,
+              fontSize: 18, // Ukuran font tetap
               fontWeight: FontWeight.bold,
               color: Colors.green[900],
             ),
+            textAlign: TextAlign.center, // Pusatkan teks
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),

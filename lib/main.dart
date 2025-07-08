@@ -17,11 +17,13 @@ import 'screens/profile.dart';
 import 'screens/pengaturan_screen.dart';
 import 'screens/notifikasi_screen.dart';
 import 'services/supabase_services.dart'; // Pastikan path ini benar
+import 'services/data_summary_service.dart'; // Import DataSummaryService
 import 'package:flutter_dotenv/flutter_dotenv.dart'; // Import flutter_dotenv
 import 'package:supabase_flutter/supabase_flutter.dart'; // Import Supabase Flutter
 
-// Deklarasikan supabaseService sebagai late final
+// Deklarasikan supabaseService dan dataSummaryService sebagai late final
 late final SupabaseService supabaseService;
+late final DataSummaryService dataSummaryService; // Pastikan ini ada dan diinisialisasi!
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -40,8 +42,9 @@ void main() async {
     anonKey: dotenv.env['SUPABASE_ANON_KEY']!, // Ambil dari .env
   );
 
-  // Inisialisasi instance supabaseService SETELAH Supabase.initialize selesai
+  // Inisialisasi instance service SETELAH Supabase.initialize selesai
   supabaseService = SupabaseService();
+  dataSummaryService = DataSummaryService(); // Inisialisasi dataSummaryService di sini
 
   runApp(const MyApp());
 }

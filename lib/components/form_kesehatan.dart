@@ -8,12 +8,12 @@ List<Map<String, dynamic>> kesehatanList = [];
 List<Map<String, dynamic>> pakanList = [];
 List<Map<String, dynamic>> telurList = [];
 
-class TambahDataScreen extends StatefulWidget {
+class FormKesehatan extends StatefulWidget {
   final String jenisData; // Properti untuk menentukan jenis data (Ayam, Telur, Pakan, Kesehatan)
   final Map<String, dynamic>? initialData; // Data awal jika dalam mode update
   final int? itemIndex; // Indeks item yang akan diupdate dalam list global
 
-  const TambahDataScreen({
+  const FormKesehatan({
     super.key,
     required this.jenisData,
     this.initialData, // Opsional, untuk mode update
@@ -21,10 +21,10 @@ class TambahDataScreen extends StatefulWidget {
   });
 
   @override
-  State<TambahDataScreen> createState() => _TambahDataScreenState();
+  State<FormKesehatan> createState() => _FormKesehatanState();
 }
 
-class _TambahDataScreenState extends State<TambahDataScreen> {
+class _FormKesehatanState extends State<FormKesehatan> {
   // Controller untuk input jumlah
   final _jumlahController = TextEditingController();
   // Controller untuk input keterangan/ringkasan/jenis penyakit

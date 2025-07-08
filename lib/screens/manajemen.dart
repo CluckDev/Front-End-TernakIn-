@@ -1,31 +1,35 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:ternakin/main.dart';
+import 'package:ternakin/services/auth_services.dart'; // Untuk mendapatkan userId
+import '../services/data_summary_service.dart'; // Import DataSummaryService
 import 'manajemen_ayam.dart';
 import 'manajemen_telur.dart';
 import 'manajemen_pakan.dart';
 import 'manajemen_kesehatan.dart';
 
-class RingkasanKesehatan {
-  final int jumlah;
-  final String waktu;
-  final String ringkasan;
-
-  RingkasanKesehatan({
-    required this.jumlah,
-    required this.waktu,
-    required this.ringkasan,
-  });
-}
-
-RingkasanKesehatan getRingkasanKesehatan(String periode) {
-  if (periode == 'Harian') {
-    return RingkasanKesehatan(jumlah: 2, waktu: 'Hari ini', ringkasan: 'Ayam sakit: 2');
-  } else if (periode == 'Mingguan') {
-    return RingkasanKesehatan(jumlah: 8, waktu: 'Minggu ini', ringkasan: 'Ayam sakit: 8');
-  } else {
-    return RingkasanKesehatan(jumlah: 20, waktu: 'Bulan ini', ringkasan: 'Ayam sakit: 20');
-  }
-}
+// Hapus model dan fungsi RingkasanKesehatan yang lama
+// class RingkasanKesehatan {
+//   final int jumlah;
+//   final String waktu;
+//   final String ringkasan;
+//
+//   RingkasanKesehatan({
+//     required this.jumlah,
+//     required this.waktu,
+//     required this.ringkasan,
+//   });
+// }
+//
+// RingkasanKesehatan getRingkasanKesehatan(String periode) {
+//   if (periode == 'Harian') {
+//     return RingkasanKesehatan(jumlah: 2, waktu: 'Hari ini', ringkasan: 'Ayam sakit: 2');
+//   } else if (periode == 'Mingguan') {
+//     return RingkasanKesehatan(jumlah: 8, waktu: 'Minggu ini', ringkasan: 'Ayam sakit: 8');
+//   } else {
+//     return RingkasanKesehatan(jumlah: 20, waktu: 'Bulan ini', ringkasan: 'Ayam sakit: 20');
+//   }
+// }
 
 class ManajemenScreen extends StatefulWidget {
   const ManajemenScreen({super.key});
@@ -36,42 +40,101 @@ class ManajemenScreen extends StatefulWidget {
 
 class _ManajemenScreenState extends State<ManajemenScreen> {
   String activePeriod = 'Harian';
+  Map<String, int> _summaryTotals = {
+    'Ayam': 0,
+    'Telur': 0,
+    'Pakan': 0,
+    'Kesehatan': 0,
+  };
+  bool _isLoading = true;
+  String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchSummaryData(); // Muat data ringkasan saat inisialisasi
+  }
+
+  Future<void> _fetchSummaryData() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    final userId = authService.currentUser?.uid;
+    if (userId == null) {
+      setState(() {
+        _errorMessage = 'Pengguna tidak login.';
+        _isLoading = false;
+      });
+      return;
+    }
+
+    try {
+      final totalAyam = await dataSummaryService.getTotalChickens(userId, activePeriod);
+      final totalTelur = await dataSummaryService.getTotalEggs(userId, activePeriod);
+      final totalPakan = await dataSummaryService.getTotalFeeds(userId, activePeriod);
+      final totalSakit = await dataSummaryService.getTotalSick(userId, activePeriod);
+
+      setState(() {
+        _summaryTotals = {
+          'Ayam': totalAyam,
+          'Telur': totalTelur,
+          'Pakan': totalPakan,
+          'Kesehatan': totalSakit,
+        };
+      });
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Gagal memuat data ringkasan: $e';
+        debugPrint('Error fetching summary data: $e');
+      });
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  // Fungsi pembantu untuk mendapatkan nama bulan dalam Bahasa Indonesia
+  String _namaBulan(int bulan) {
+    const namaBulan = [
+      '', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+    ];
+    return namaBulan[bulan];
+  }
 
   @override
   Widget build(BuildContext context) {
-    final ayam = getRingkasanAyam(activePeriod);
-    final telur = getRingkasanTelur(activePeriod);
-    final pakan = getRingkasanPakan(activePeriod);
-    final kesehatan = getRingkasanKesehatan(activePeriod);
-
     final ringkasanList = [
       _RingkasanData(
         'Ayam',
         Icons.pets,
-        ayam.jumlah,
-        ayam.waktu,
-        ayam.ringkasan,
+        _summaryTotals['Ayam']!,
+        activePeriod == 'Harian' ? 'Hari ini' : activePeriod == 'Mingguan' ? 'Minggu ini' : 'Bulan ini',
+        'Jumlah ayam saat ini ${_summaryTotals['Ayam']}',
       ),
       _RingkasanData(
         'Telur',
         Icons.egg,
-        telur.jumlah,
-        telur.waktu,
-        telur.ringkasan,
+        _summaryTotals['Telur']!,
+        activePeriod == 'Harian' ? 'Hari ini' : activePeriod == 'Mingguan' ? 'Minggu ini' : 'Bulan ini',
+        'Jumlah telur saat ini ${_summaryTotals['Telur']}',
       ),
       _RingkasanData(
         'Pakan',
         Icons.rice_bowl,
-        pakan.jumlah,
-        pakan.waktu,
-        pakan.ringkasan,
+        _summaryTotals['Pakan']!,
+        activePeriod == 'Harian' ? 'Hari ini' : activePeriod == 'Mingguan' ? 'Minggu ini' : 'Bulan ini',
+        'Total pakan ${_summaryTotals['Pakan']} kg',
       ),
       _RingkasanData(
         'Kesehatan',
         Icons.health_and_safety,
-        kesehatan.jumlah,
-        kesehatan.waktu,
-        kesehatan.ringkasan,
+        _summaryTotals['Kesehatan']!,
+        activePeriod == 'Harian' ? 'Hari ini' : activePeriod == 'Mingguan' ? 'Minggu ini' : 'Bulan ini',
+        'Ayam sakit: ${_summaryTotals['Kesehatan']}',
       ),
     ];
 
@@ -135,23 +198,24 @@ class _ManajemenScreenState extends State<ManajemenScreen> {
             ),
           ),
           Expanded(
-            child: Container(
-              color: Colors.green[50],
-              child: ListView.builder(
-                padding: const EdgeInsets.all(16),
-                itemCount: ringkasanList.length,
-                itemBuilder: (context, index) {
-                  final item = ringkasanList[index];
-                  return _RingkasanItem(
-                    label: item.label,
-                    icon: item.icon,
-                    jumlah: item.jumlah,
-                    waktu: item.waktu,
-                    ringkasan: item.ringkasan,
-                  );
-                },
-              ),
-            ),
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _errorMessage != null
+                    ? Center(child: Text(_errorMessage!))
+                    : ListView.builder(
+                        padding: const EdgeInsets.all(16),
+                        itemCount: ringkasanList.length,
+                        itemBuilder: (context, index) {
+                          final item = ringkasanList[index];
+                          return _RingkasanItem(
+                            label: item.label,
+                            icon: item.icon,
+                            jumlah: item.jumlah,
+                            waktu: item.waktu,
+                            ringkasan: item.ringkasan,
+                          );
+                        },
+                      ),
           ),
         ],
       ),
@@ -165,6 +229,7 @@ class _ManajemenScreenState extends State<ManajemenScreen> {
         setState(() {
           activePeriod = label;
         });
+        _fetchSummaryData(); // Panggil ulang untuk memuat data berdasarkan periode baru
       },
       style: ElevatedButton.styleFrom(
         backgroundColor: isActive ? Colors.green[700] : Colors.green[300],
@@ -221,6 +286,7 @@ class _ManajemenScreenState extends State<ManajemenScreen> {
   }
 }
 
+// Data ringkasan (tanpa index karena tidak ada edit/hapus di sini)
 class _RingkasanData {
   final String label;
   final IconData icon;

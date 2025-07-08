@@ -1,75 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'tambah_data_screen.dart';
-
-// Model Ayam
-class Ayam {
-  int jumlah;
-  String waktu;
-  String status; // Masuk / Keluar
-
-  Ayam({required this.jumlah, required this.waktu, required this.status});
-}
-class RingkasanAyam {
-  final int jumlah;
-  final String waktu;
-  final String ringkasan;
-
-  RingkasanAyam({
-    required this.jumlah,
-    required this.waktu,
-    required this.ringkasan,
-  });
-}
-
-RingkasanAyam getRingkasanAyam(String periode) {
-  int totalMasuk = 0;
-  int totalKeluar = 0;
-
-  for (var ayam in ayamList) {
-    if (ayam.status == 'Masuk') {
-      totalMasuk += ayam.jumlah;
-    } else if (ayam.status == 'Keluar') {
-      totalKeluar += ayam.jumlah;
-    }
-  }
-
-  int jumlahSekarang = totalMasuk - totalKeluar;
-
-  String waktuText;
-  String ringkasanText;
-
-  switch (periode) {
-    case 'Harian':
-      waktuText = 'Hari ini';
-      ringkasanText = 'Jumlah ayam saat ini $jumlahSekarang';
-      break;
-    case 'Mingguan':
-      waktuText = 'Minggu ini';
-      ringkasanText = 'Estimasi ayam mingguan';
-      break;
-    case 'Bulanan':
-      waktuText = 'Bulan ini';
-      ringkasanText = 'Estimasi ayam bulanan';
-      break;
-    default:
-      waktuText = 'Hari ini';
-      ringkasanText = 'Jumlah ayam saat ini $jumlahSekarang';
-      break;
-  }
-
-  return RingkasanAyam(
-    jumlah: jumlahSekarang,
-    waktu: waktuText,
-    ringkasan: ringkasanText,
-  );
-}
-
-// Data global ayamList sebagai sumber data
-List<Ayam> ayamList = [
-  Ayam(jumlah: 1200, waktu: '2025-04-20', status: 'Masuk'),
-  Ayam(jumlah: 1500, waktu: '2025-04-21', status: 'Masuk'),
-];
+import 'package:ternakin/services/auth_services.dart'; // Untuk mendapatkan userId
+import 'package:ternakin/services/supabase_services.dart'; // Untuk berinteraksi dengan Supabase
+import '../components/chicken_form.dart'; // Import ChickenForm yang sudah terpisah
+import '../models/chicken_model.dart'; // Import model Chicken
 
 class ManajemenAyamScreen extends StatefulWidget {
   const ManajemenAyamScreen({super.key});
@@ -80,42 +14,163 @@ class ManajemenAyamScreen extends StatefulWidget {
 
 class _ManajemenAyamScreenState extends State<ManajemenAyamScreen> {
   String activePeriod = 'Harian';
+  List<Chicken> _chickens = []; // List untuk menyimpan data ayam dari Supabase
+  bool _isLoading = true; // State untuk indikator loading
+  String? _errorMessage; // State untuk pesan error
+
+  // Deklarasikan GlobalKey untuk Scaffold
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchChickens(); // Muat data ayam saat inisialisasi
+  }
+
+  // Fungsi pembantu untuk mendapatkan nama bulan dalam Bahasa Indonesia
+  String _namaBulan(int bulan) {
+    const namaBulan = [
+      '', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+    ];
+    return namaBulan[bulan];
+  }
+
+  Future<void> _fetchChickens() async {
+    debugPrint('DEBUG: _fetchChickens() called. Setting _isLoading = true.');
+    if (!mounted) return; // Pastikan mounted sebelum setState
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+    final userId = authService.currentUser?.uid;
+    if (userId == null) {
+      if (!mounted) return; // Pastikan mounted sebelum setState
+      setState(() {
+        _errorMessage = 'Pengguna tidak login.';
+        _isLoading = false; // Ini akan mematikan loading jika tidak ada user
+      });
+      debugPrint('DEBUG: _fetchChickens() - User not logged in. Setting _isLoading = false.');
+      return;
+    }
+    try {
+      final fetchedChickens = await supabaseService.getChickens(userId);
+      if (!mounted) return; // Pastikan mounted sebelum setState
+      setState(() {
+        _chickens = fetchedChickens;
+      });
+      debugPrint('DEBUG: _fetchChickens() - Data fetched successfully.');
+    } catch (e) {
+      if (!mounted) return; // Pastikan mounted sebelum setState
+      setState(() {
+        _errorMessage = 'Gagal memuat data ayam: $e';
+      });
+      debugPrint('ERROR: _fetchChickens() - Gagal memuat data ayam: $e');
+    } finally {
+      if (mounted) { // Pastikan widget masih mounted sebelum memanggil setState
+        setState(() {
+          _isLoading = false; // Ini akan selalu mematikan loading
+        });
+        debugPrint('DEBUG: _fetchChickens() - Finally block executed. Setting _isLoading = false.');
+      }
+    }
+  }
+
+  // Fungsi untuk menghitung total ayam berdasarkan filter
+  int _hitungTotalAyam() {
+    int masuk = 0;
+    int keluar = 0;
+    DateTime now = DateTime.now();
+
+    final filteredChickens = _chickens.where((chicken) {
+      if (chicken.createdAt == null) return false; // Abaikan jika createdAt null
+
+      DateTime waktuChicken = chicken.createdAt!.toLocal(); // Pastikan waktu lokal
+
+      if (activePeriod == 'Harian') {
+        return waktuChicken.year == now.year &&
+            waktuChicken.month == now.month &&
+            waktuChicken.day == now.day;
+      } else if (activePeriod == 'Mingguan') {
+        DateTime awalMinggu = now.subtract(Duration(days: now.weekday - 1));
+        DateTime akhirMinggu = awalMinggu.add(const Duration(days: 6));
+        return waktuChicken.isAfter(awalMinggu.subtract(const Duration(seconds: 1))) &&
+            waktuChicken.isBefore(akhirMinggu.add(const Duration(days: 1)));
+      } else if (activePeriod == 'Bulanan') {
+        return waktuChicken.year == now.year && waktuChicken.month == now.month;
+      }
+      return true; // Tampilkan semua jika tidak ada filter periode yang cocok
+    }).toList();
+
+    for (var chicken in filteredChickens) {
+      if (chicken.status == 'in') { // Sesuaikan dengan nilai 'in'/'out' di database
+        masuk += chicken.amount ?? 0;
+      } else if (chicken.status == 'out') {
+        keluar += chicken.amount ?? 0;
+      }
+    }
+    return masuk - keluar;
+  }
+
+  // Metode baru untuk menangani logika penghapusan dari parent
+  Future<void> _handleDeleteChicken(int id) async {
+    debugPrint('DEBUG: _handleDeleteChicken() called for ID: $id');
+    if (!mounted) return; // Pastikan mounted sebelum setState
+    setState(() {
+      _isLoading = true; // Tampilkan loading untuk seluruh layar
+      _errorMessage = null; // Reset error message
+    });
+    try {
+      await supabaseService.deleteChicken(id);
+      await _fetchChickens(); // Muat ulang data, ini akan mengatur _isLoading=false
+      // Gunakan _scaffoldKey.currentContext untuk menampilkan SnackBar
+      if (_scaffoldKey.currentContext != null && mounted) {
+        ScaffoldMessenger.of(_scaffoldKey.currentContext!).showSnackBar(
+          const SnackBar(content: Text('Data berhasil dihapus!')),
+        );
+      }
+    } catch (e) {
+      debugPrint('ERROR: Gagal menghapus data di _handleDeleteChicken: $e');
+      // Gunakan _scaffoldKey.currentContext untuk menampilkan SnackBar
+      if (_scaffoldKey.currentContext != null && mounted) {
+        ScaffoldMessenger.of(_scaffoldKey.currentContext!).showSnackBar(
+          SnackBar(content: Text('Gagal menghapus data: $e')),
+        );
+      }
+    } finally {
+      // _fetchChickens() sudah memiliki finally block yang mengatur _isLoading = false
+      // Jadi, tidak perlu lagi mengatur _isLoading = false di sini secara eksplisit
+      // jika _fetchChickens() selalu dipanggil.
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
-final ringkasanList = ayamList.asMap().entries.where((entry) {
-  final item = entry.value;
-  DateTime now = DateTime.now();
-  DateTime waktuItem = DateTime.tryParse(item.waktu) ?? now;
+    // Filter data berdasarkan activePeriod
+    final filteredList = _chickens.where((chicken) {
+      if (chicken.createdAt == null) return false; // Abaikan jika createdAt null
 
-  if (activePeriod == 'Harian') {
-    return waktuItem.year == now.year &&
-           waktuItem.month == now.month &&
-           waktuItem.day == now.day;
-  } else if (activePeriod == 'Mingguan') {
-    DateTime awalMinggu = now.subtract(Duration(days: now.weekday - 1));
-    DateTime akhirMinggu = awalMinggu.add(const Duration(days: 6));
-    return waktuItem.isAfter(awalMinggu.subtract(const Duration(seconds: 1))) &&
-           waktuItem.isBefore(akhirMinggu.add(const Duration(days: 1)));
-  } else if (activePeriod == 'Bulanan') {
-    return waktuItem.year == now.year && waktuItem.month == now.month;
-  }
-  return true;
-}).map((entry) {
-  final index = entry.key;
-  final item = entry.value;
+      DateTime now = DateTime.now();
+      DateTime waktuChicken = chicken.createdAt!.toLocal(); // Pastikan waktu lokal
 
-  return _RingkasanData(
-    'Ayam',
-    Icons.pets,
-    item.jumlah,
-    item.waktu,
-    '${item.status} ${item.jumlah}',
-    index,
-  );
-}).toList();
+      if (activePeriod == 'Harian') {
+        return waktuChicken.year == now.year &&
+            waktuChicken.month == now.month &&
+            waktuChicken.day == now.day;
+      } else if (activePeriod == 'Mingguan') {
+        DateTime awalMinggu = now.subtract(Duration(days: now.weekday - 1));
+        DateTime akhirMinggu = awalMinggu.add(const Duration(days: 6));
+        return waktuChicken.isAfter(awalMinggu.subtract(const Duration(seconds: 1))) &&
+            waktuChicken.isBefore(akhirMinggu.add(const Duration(days: 1)));
+      } else if (activePeriod == 'Bulanan') {
+        return waktuChicken.year == now.year && waktuChicken.month == now.month;
+      }
+      return true; // Tampilkan semua jika tidak ada filter periode yang cocok
+    }).toList();
 
     return Scaffold(
+      key: _scaffoldKey, // Pasang GlobalKey ke Scaffold
       appBar: AppBar(
         title: const Text('Manajemen Ayam'),
         backgroundColor: Colors.green,
@@ -161,18 +216,18 @@ final ringkasanList = ayamList.asMap().entries.where((entry) {
                         style: GoogleFonts.poppins(
                             fontSize: 14, color: Colors.grey[700])),
                     Text('${_hitungTotalAyam()}',
-                    style: GoogleFonts.poppins(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 20,
-                      color: Colors.green[800],
-                    )),
+                        style: GoogleFonts.poppins(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 20,
+                          color: Colors.green[800],
+                        )),
                   ],
                 ),
               ],
             ),
           ),
 
-          // Filter Harian/Mingguan/Bulanan (belum pakai fungsi, hanya UI)
+          // Filter Harian/Mingguan/Bulanan
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
@@ -189,84 +244,76 @@ final ringkasanList = ayamList.asMap().entries.where((entry) {
 
           // List data ayam dengan tombol edit & hapus
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: ringkasanList.length,
-              itemBuilder: (context, index) {
-                final item = ringkasanList[index];
-                return _RingkasanItem(
-                  label: item.label,
-                  icon: item.icon,
-                  jumlah: item.jumlah,
-                  waktu: item.waktu,
-                  ringkasan: item.ringkasan,
-                  onEdit: () async {
-                    // Buka TambahDataScreen dengan data awal untuk edit
-                    final edited = await Navigator.push<Ayam>(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => TambahDataScreen(
-                          jenisData: 'Ayam',
-                          initialAyam: ayamList[item.index],
-                        ),
-                      ),
-                    );
-
-                    if (edited != null) {
-                      setState(() {
-                        ayamList[item.index] = edited;
-                      });
-                    }
-                  },
-                  onDelete: () {
-                    // Konfirmasi hapus
-                    showDialog(
-                      context: context,
-                      builder: (context) => AlertDialog(
-                        title: const Text('Konfirmasi Hapus'),
-                        content: const Text('Yakin ingin menghapus data ini?'),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context),
-                            child: const Text('Batal'),
-                          ),
-                          TextButton(
-                            onPressed: () {
-                              setState(() {
-                                ayamList.removeAt(item.index);
-                              });
-                              Navigator.pop(context);
-                            },
-                            child: const Text(
-                              'Hapus',
-                              style: TextStyle(color: Colors.red),
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _errorMessage != null
+                    ? Center(child: Text(_errorMessage!))
+                    : filteredList.isEmpty
+                        ? Center(
+                            child: Text(
+                              'Tidak ada data ayam untuk periode ini.',
+                              style: GoogleFonts.poppins(fontSize: 16, color: Colors.grey),
                             ),
+                          )
+                        : ListView.builder(
+                            padding: const EdgeInsets.all(16),
+                            itemCount: filteredList.length,
+                            itemBuilder: (context, index) {
+                              final chicken = filteredList[index];
+                              return _ChickenListItem(
+                                chicken: chicken,
+                                onEdit: () async {
+                                  // Tampilkan ChickenForm dalam dialog untuk edit
+                                  final editedChicken = await showDialog<Chicken>(
+                                    context: _scaffoldKey.currentContext!, // Gunakan context dari GlobalKey
+                                    builder: (context) => AlertDialog(
+                                      title: Text('Edit Data Ayam', style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+                                      content: SingleChildScrollView( // Tambahkan SingleChildScrollView
+                                        child: ChickenForm(
+                                          initialData: chicken, // Teruskan data ayam yang akan diedit
+                                          onSave: (savedData) {
+                                            Navigator.pop(context, savedData); // Tutup dialog dan kirim data kembali
+                                          },
+                                          namaBulanHelper: _namaBulan, // Teruskan helper function
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                  if (editedChicken != null) {
+                                    _fetchChickens(); // Muat ulang data setelah edit
+                                  }
+                                },
+                                // Meneruskan callback untuk penghapusan
+                                onDeleteConfirmed: (id) async {
+                                  await _handleDeleteChicken(id); // Panggil metode penanganan hapus di parent
+                                },
+                              );
+                            },
                           ),
-                        ],
-                      ),
-                    );
-                  },
-                );
-              },
-            ),
           ),
         ],
       ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.green[700],
         onPressed: () async {
-          // Tambah data baru
-          final newAyam = await Navigator.push<Ayam>(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const TambahDataScreen(jenisData: 'Ayam'),
+          // Tampilkan ChickenForm dalam dialog untuk tambah data
+          final newChicken = await showDialog<Chicken>(
+            context: _scaffoldKey.currentContext!, // Gunakan context dari GlobalKey
+            builder: (context) => AlertDialog(
+              title: Text('Tambah Data Ayam', style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+              content: SingleChildScrollView( // Tambahkan SingleChildScrollView
+                child: ChickenForm(
+                  onSave: (savedData) {
+                    Navigator.pop(context, savedData); // Tutup dialog dan kirim data kembali
+                  },
+                  namaBulanHelper: _namaBulan, // Teruskan helper function
+                ),
+              ),
             ),
           );
 
-          if (newAyam != null) {
-            setState(() {
-              ayamList.add(newAyam);
-            });
+          if (newChicken != null) {
+            _fetchChickens(); // Muat ulang data setelah tambah
           }
         },
         child: const Icon(Icons.add, color: Colors.white),
@@ -286,76 +333,40 @@ final ringkasanList = ayamList.asMap().entries.where((entry) {
       child: Text(label, style: GoogleFonts.poppins(color: Colors.white)),
     );
   }
-int _hitungTotalAyam() {
-  int masuk = 0;
-  int keluar = 0;
-  DateTime now = DateTime.now();
-
-  for (var ayam in ayamList) {
-    DateTime waktuAyam = DateTime.tryParse(ayam.waktu) ?? now;
-
-    // Cek apakah data sesuai filter
-    bool cocok = false;
-    if (activePeriod == 'Harian') {
-      cocok = waktuAyam.year == now.year &&
-              waktuAyam.month == now.month &&
-              waktuAyam.day == now.day;
-    } else if (activePeriod == 'Mingguan') {
-      DateTime awalMinggu = now.subtract(Duration(days: now.weekday - 1));
-      DateTime akhirMinggu = awalMinggu.add(const Duration(days: 6));
-      cocok = waktuAyam.isAfter(awalMinggu.subtract(const Duration(seconds: 1))) &&
-              waktuAyam.isBefore(akhirMinggu.add(const Duration(days: 1)));
-    } else if (activePeriod == 'Bulanan') {
-      cocok = waktuAyam.year == now.year && waktuAyam.month == now.month;
-    }
-
-    if (cocok) {
-      if (ayam.status == 'Masuk') {
-        masuk += ayam.jumlah;
-      } else if (ayam.status == 'Keluar') {
-        keluar += ayam.jumlah;
-      }
-    }
-  }
-
-  return masuk - keluar;
-}
-}
-// Data ringkasan dengan index agar bisa edit/hapus
-class _RingkasanData {
-  final String label;
-  final IconData icon;
-  final int jumlah;
-  final String waktu;
-  final String ringkasan;
-  final int index;
-
-  _RingkasanData(this.label, this.icon, this.jumlah, this.waktu, this.ringkasan,
-      this.index);
 }
 
 // Widget item list ayam dengan tombol edit dan hapus
-class _RingkasanItem extends StatelessWidget {
-  final String label;
-  final IconData icon;
-  final int jumlah;
-  final String waktu;
-  final String ringkasan;
+class _ChickenListItem extends StatelessWidget {
+  final Chicken chicken; // Menerima objek Chicken
   final VoidCallback? onEdit;
-  final VoidCallback? onDelete;
+  // Mengubah callback hapus menjadi satu fungsi yang menerima ID
+  final Future<void> Function(int id) onDeleteConfirmed;
 
-  const _RingkasanItem({
-    required this.label,
-    required this.icon,
-    required this.jumlah,
-    required this.waktu,
-    required this.ringkasan,
+  const _ChickenListItem({
+    super.key,
+    required this.chicken,
     this.onEdit,
-    this.onDelete,
+    required this.onDeleteConfirmed, // Jadikan required
   });
+
+  // Fungsi pembantu untuk mendapatkan nama bulan dalam Bahasa Indonesia
+  String _namaBulan(int bulan) {
+    const namaBulan = [
+      '', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+    ];
+    return namaBulan[bulan];
+  }
 
   @override
   Widget build(BuildContext context) {
+    final String waktuFormatted = chicken.createdAt != null
+        ? '${chicken.createdAt!.toLocal().hour.toString().padLeft(2, '0')}:${chicken.createdAt!.toLocal().minute.toString().padLeft(2, '0')} - ${chicken.createdAt!.toLocal().day} ${_namaBulan(chicken.createdAt!.toLocal().month)}'
+        : 'N/A';
+
+    final String statusText = chicken.status == 'in' ? 'Masuk' : 'Keluar';
+    final String ringkasan = '$statusText ${chicken.amount ?? 0}'; // Menggunakan null-aware operator
+
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8),
       padding: const EdgeInsets.all(16),
@@ -380,7 +391,7 @@ class _RingkasanItem extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    label,
+                    'Ayam', // Label tetap 'Ayam'
                     style: GoogleFonts.poppins(
                       fontWeight: FontWeight.bold,
                       fontSize: 14,
@@ -388,7 +399,7 @@ class _RingkasanItem extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    waktu,
+                    waktuFormatted,
                     style: GoogleFonts.poppins(
                       fontSize: 13,
                       color: Colors.grey[700],
@@ -419,7 +430,35 @@ class _RingkasanItem extends StatelessWidget {
             // Tombol hapus
             IconButton(
               icon: const Icon(Icons.delete, color: Colors.red),
-              onPressed: onDelete,
+              onPressed: () {
+                // Menggunakan context dari _ChickenListItem untuk showDialog
+                // Ini aman karena dialog akan menutup sebelum _ChickenListItem mungkin di-dispose
+                showDialog(
+                  context: context,
+                  builder: (dialogContext) => AlertDialog(
+                    title: const Text('Konfirmasi Hapus'),
+                    content: const Text('Yakin ingin menghapus data ini?'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(dialogContext),
+                        child: const Text('Batal'),
+                      ),
+                      TextButton(
+                        onPressed: () async {
+                          Navigator.pop(dialogContext); // Tutup dialog
+                          // Panggil callback yang disediakan oleh parent
+                          // Parent akan menangani loading, delete, fetch, dan SnackBar
+                          await onDeleteConfirmed(chicken.id!);
+                        },
+                        child: const Text(
+                          'Hapus',
+                          style: TextStyle(color: Colors.red),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
               tooltip: 'Hapus Data',
             ),
           ],
