@@ -2,23 +2,37 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'tambah_data_screen.dart';
 
-// List data pakan global (bisa diakses dari file lain)
+// Data Dummy
 List<RingkasanPakan> pakanList = [
-  RingkasanPakan(
-    jumlah: 100,
-    waktu: '08:00 - 20 April',
-    ringkasan: 'Keluar 50 kg',
-  ),
-  RingkasanPakan(
-    jumlah: 40,
-    waktu: '08:00 - 20 April',
-    ringkasan: 'Masuk: 10 kg',
-  ),
+  RingkasanPakan(jumlah: 100, waktu: '08:00 - 20 April', ringkasan: 'Masuk Jagung 50'),
+  RingkasanPakan(jumlah: 40, waktu: '08:00 - 21 April', ringkasan: 'Masuk Jagung 40'),
 ];
+
+// Model
+class RingkasanPakan {
+  final int jumlah;
+  final String waktu;
+  final String ringkasan;
+  RingkasanPakan({
+    required this.jumlah,
+    required this.waktu,
+    required this.ringkasan,
+  });
+}
+
+// Dummy Ringkasan Berdasarkan Periode
+RingkasanPakan getRingkasanPakan(String periode) {
+  if (periode == 'Harian') {
+    return RingkasanPakan(jumlah: 20, waktu: '08:00 - 20 April', ringkasan: 'Masuk Jagung 20');
+  } else if (periode == 'Mingguan') {
+    return RingkasanPakan(jumlah: 140, waktu: 'Minggu ini', ringkasan: 'Masuk Jagung 140');
+  } else {
+    return RingkasanPakan(jumlah: 600, waktu: 'Bulan ini', ringkasan: 'Masuk Jagung 600');
+  }
+}
 
 class ManajemenPakanScreen extends StatefulWidget {
   const ManajemenPakanScreen({super.key});
-
   @override
   State<ManajemenPakanScreen> createState() => _ManajemenPakanScreenState();
 }
@@ -28,62 +42,83 @@ class _ManajemenPakanScreenState extends State<ManajemenPakanScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final data = getRingkasanPakan(activePeriod);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Manajemen Pakan'),
-        backgroundColor: Colors.green[700],
+        backgroundColor: Colors.green,
         titleTextStyle: GoogleFonts.poppins(
           fontSize: 20,
           fontWeight: FontWeight.bold,
           color: Colors.white,
         ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
-// ...existing code...
       body: Column(
         children: [
-          // Tampilkan total data pakan di sini
-          Padding(
-            padding: const EdgeInsets.only(top: 16, left: 16, right: 16, bottom: 0),
+          // Total Data Pakan
+          Container(
+            margin: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.green.shade50,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.green.withOpacity(0.1),
+                  blurRadius: 8,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
             child: Row(
               children: [
-                Icon(Icons.rice_bowl, color: Colors.green[700]),
-                const SizedBox(width: 8),
-                Text(
-                  'Total Data Pakan: ${pakanList.length}',
-                  style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 16),
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFd0f0c0),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.rice_bowl, size: 28, color: Colors.green),
+                ),
+                const SizedBox(width: 12),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Total Pakan',
+                        style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey[700])),
+                    Text('${pakanList.length}',
+                        style: GoogleFonts.poppins(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 20,
+                          color: Colors.green[800],
+                        )),
+                  ],
                 ),
               ],
             ),
           ),
-          // Chart dummy/grafik
-          Container(
-            height: 200,
-            margin: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.green[100],
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Center(
-              child: Text(
-                'Grafik Produksi Pakan - $activePeriod',
-                style: GoogleFonts.poppins(fontSize: 16),
-              ),
-            ),
-          ),
-          // Tab filter
+
+          // Tab Filter
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _tabFilter('Harian'),
-                _tabFilter('Mingguan'),
-                _tabFilter('Bulanan'),
+                _buildTab('Harian'),
+                _buildTab('Mingguan'),
+                _buildTab('Bulanan'),
               ],
             ),
           ),
-          const SizedBox(height: 16),
-          // List ringkasan dari getRingkasanPakan sesuai tab aktif
+
+          const SizedBox(height: 12),
+
+          // Ringkasan
           Expanded(
             child: ListView(
               padding: const EdgeInsets.all(16),
@@ -91,48 +126,47 @@ class _ManajemenPakanScreenState extends State<ManajemenPakanScreen> {
                 _RingkasanItem(
                   label: 'Pakan',
                   icon: Icons.rice_bowl,
-                  jumlah: getRingkasanPakan(activePeriod).jumlah,
+                  jumlah: data.jumlah,
                   satuan: 'kg',
-                  waktu: getRingkasanPakan(activePeriod).waktu,
-                  ringkasan: getRingkasanPakan(activePeriod).ringkasan,
+                  waktu: data.waktu,
+                  ringkasan: data.ringkasan,
                 ),
               ],
             ),
           ),
         ],
       ),
+
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.green[700],
         onPressed: () {
           Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const TambahDataScreen(jenisData: 'Pakan'),
-        ),
-        );
+            context,
+            MaterialPageRoute(
+              builder: (context) => const TambahDataScreen(jenisData: 'Pakan'),
+            ),
+          );
         },
         child: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }
 
-  Widget _tabFilter(String label) {
+  Widget _buildTab(String label) {
     final bool isActive = activePeriod == label;
     return ElevatedButton(
-      onPressed: () {
-        setState(() {
-          activePeriod = label;
-        });
-      },
+      onPressed: () => setState(() => activePeriod = label),
       style: ElevatedButton.styleFrom(
         backgroundColor: isActive ? Colors.green[700] : Colors.green[300],
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       ),
       child: Text(label, style: GoogleFonts.poppins(color: Colors.white)),
     );
   }
 }
 
+// Komponen Ringkasan Pakan
 class _RingkasanItem extends StatelessWidget {
   final String label;
   final IconData icon;
@@ -153,6 +187,8 @@ class _RingkasanItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -164,160 +200,86 @@ class _RingkasanItem extends StatelessWidget {
           ),
         ],
       ),
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-      margin: const EdgeInsets.symmetric(vertical: 6),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          if (constraints.maxWidth < 350) {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.green[100],
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Icon(icon, color: Colors.green[700], size: 28),
-                    ),
-                    const SizedBox(width: 8),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(label, style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 16)),
-                        const SizedBox(height: 4),
-                        Text(waktu, style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey[700])),
-                      ],
-                    ),
-                  ],
-                ),
-                const Divider(height: 18, thickness: 1),
-                Center(
-                  child: Text(
-                    ringkasan,
-                    style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 14),
-                    textAlign: TextAlign.center,
-                    // Tambahkan ini:
-                    softWrap: true,
-                    maxLines: 3, // atau boleh lebih besar sesuai kebutuhan
-                    overflow: TextOverflow.visible, // agar tidak dipotong
-                  ),
-                ),
-                const Divider(height: 18, thickness: 1),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('Jumlah', style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 14)),
-                    Text('$jumlah $satuan', style: GoogleFonts.poppins(fontSize: 14)),
-                  ],
-                ),
-              ],
-            );
-          }
-          return Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.green[100],
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(icon, color: Colors.green[700], size: 28),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                flex: 3,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(label, style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 16), overflow: TextOverflow.ellipsis),
-                    const SizedBox(height: 4),
-                    Text(waktu, style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey[700]), overflow: TextOverflow.ellipsis),
-                  ],
-                ),
-              ),
-              // Garis vertikal
-              Container(
-                width: 1,
-                height: 40,
-                color: Colors.grey[400],
-                margin: const EdgeInsets.symmetric(horizontal: 6),
-              ),
-              // Tengah (ringkasan)
+      child: IntrinsicHeight(
+        child: Row(
+          children: [
+            // Kolom 1
             Expanded(
-              flex: 3,
-              child: Center(
-                child: Text(
-                  ringkasan,
-                  style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 14),
-                  textAlign: TextAlign.center,
-                  softWrap: true,
-                  maxLines: 3,
-                  overflow: TextOverflow.visible,
-                ),
+              flex: 2,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: GoogleFonts.poppins(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    waktu,
+                    style: GoogleFonts.poppins(
+                      fontSize: 13,
+                      color: Colors.grey[700],
+                    ),
+                  ),
+                ],
               ),
             ),
-              // Garis vertikal
-              Container(
-                width: 1,
-                height: 40,
-                color: Colors.grey[400],
-                margin: const EdgeInsets.symmetric(horizontal: 6),
+
+            // Garis Vertikal
+            Container(width: 1, color: Colors.grey[300], margin: const EdgeInsets.symmetric(horizontal: 8)),
+
+            // Kolom 2
+            Expanded(
+              flex: 2,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Text(
+                    'Masuk',
+                    style: GoogleFonts.poppins(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${ringkasan.replaceAll('Masuk', '').trim()} $satuan',
+                    style: GoogleFonts.poppins(fontSize: 13),
+                  ),
+                ],
               ),
-              // Kanan (jumlah + satuan)
-              Expanded(
-                flex: 2,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text('Jumlah', style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 14)),
-                    const SizedBox(height: 4),
-                    Text('$jumlah $satuan', style: GoogleFonts.poppins(fontSize: 14)),
-                  ],
-                ),
+            ),
+
+            // Garis Vertikal
+            Container(width: 1, color: Colors.grey[300], margin: const EdgeInsets.symmetric(horizontal: 8)),
+
+            // Kolom 3
+            Expanded(
+              flex: 1,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    'Jumlah',
+                    style: GoogleFonts.poppins(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '$jumlah $satuan',
+                    style: GoogleFonts.poppins(fontSize: 14),
+                  ),
+                ],
               ),
-            ],
-          );
-        },
+            ),
+          ],
+        ),
       ),
-    );
-  }
-}
-
-// Model ringkasan pakan
-class RingkasanPakan {
-  final int jumlah;
-  final String waktu;
-  final String ringkasan;
-  RingkasanPakan({
-    required this.jumlah,
-    required this.waktu,
-    required this.ringkasan,
-  });
-}
-
-// Fungsi untuk mengambil ringkasan pakan sesuai periode (opsional)
-RingkasanPakan getRingkasanPakan(String periode) {
-  // Contoh data dummy, nanti bisa diganti ambil dari database atau API
-  if (periode == 'Harian') {
-    return RingkasanPakan(
-      jumlah: 20,
-      waktu: '08:00 - 20 April',
-      ringkasan: 'Masuk: Jagung 20 kg',
-    );
-  } else if (periode == 'Mingguan') {
-    return RingkasanPakan(
-      jumlah: 140,
-      waktu: 'Minggu ini',
-      ringkasan: 'Masuk: Jagung 140 kg',
-    );
-  } else {
-    return RingkasanPakan(
-      jumlah: 600,
-      waktu: 'Bulan ini',
-      ringkasan: 'Masuk: Jagung 600 kg',
     );
   }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class NotifikasiScreen extends StatelessWidget {
   const NotifikasiScreen({super.key});
@@ -25,9 +26,22 @@ class NotifikasiScreen extends StatelessWidget {
     ];
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Notifikasi'),
-        backgroundColor: Colors.brown,
+            appBar: AppBar(
+        backgroundColor: Colors.green,
+        title: Text(
+          'Notifikasi',
+          style: GoogleFonts.poppins(
+            color: Colors.white, // ⬅️ Warna teks putih
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
       ),
       body: notifikasiList.isEmpty
           ? const Center(child: Text('Belum ada notifikasi.'))

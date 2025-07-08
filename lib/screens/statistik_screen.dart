@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dashboard_chart.dart';
+import 'package:google_fonts/google_fonts.dart';
+
 
 class StatistikScreen extends StatefulWidget {
   const StatistikScreen({super.key});
@@ -28,9 +30,21 @@ class _StatistikScreenState extends State<StatistikScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Statistik'),
-        backgroundColor: Colors.green[700],
-        elevation: 2,
+        backgroundColor: Colors.green,
+        title: Text(
+          'Statistik',
+          style: GoogleFonts.poppins(
+            color: Colors.white, // ⬅️ Warna teks putih
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
       ),
       body: ListView(
         padding: const EdgeInsets.all(20),

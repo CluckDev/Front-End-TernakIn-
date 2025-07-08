@@ -71,16 +71,14 @@ class _ProfilScreenState extends State<ProfilScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Profil'),
         backgroundColor: Colors.green,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            // Ketika kembali dari ProfilScreen, kita ingin me-refresh DashboardScreen
-            // agar data profil terbaru (nama/foto) dimuat ulang.
-            // Pop the current route and potentially trigger a refresh on the previous route
-            Navigator.pop(context);
-          },
+        title: Text(
+          'Profil',
+          style: GoogleFonts.poppins(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ),
       body: ListView(

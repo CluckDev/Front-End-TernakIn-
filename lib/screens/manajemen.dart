@@ -56,7 +56,7 @@ class _ManajemenScreenState extends State<ManajemenScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Manajemen'),
-        backgroundColor: Colors.green[700],
+        backgroundColor: Colors.green,
         titleTextStyle: GoogleFonts.poppins(
           fontSize: 20,
           fontWeight: FontWeight.bold,

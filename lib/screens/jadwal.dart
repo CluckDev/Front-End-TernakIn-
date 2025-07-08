@@ -86,14 +86,19 @@ class _JadwalScreenState extends State<JadwalScreen> {
     final onSurfaceSecondary = onSurface.withValues(alpha: 0.7 * 255);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Jadwal Kegiatan'),
+     appBar: AppBar(
+        title: const Text(
+          'Jadwal',
+          style: TextStyle(
+            color: Colors.white, // Ubah warna teks jadi putih
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         backgroundColor: Colors.green[700],
         elevation: 2,
-        actions: [
-          // ...existing code...
-        ],
-      ),
+        actions: [ // ...
+          ],
+        ),
       body: filteredJadwal.isEmpty
           ? Center(
               child: Column(

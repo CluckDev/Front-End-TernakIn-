@@ -163,9 +163,21 @@ class _EditProfilScreenState extends State<EditProfilScreen> {
     final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Edit Profil'),
-        backgroundColor: Colors.green[700],
-        elevation: 0,
+        backgroundColor: Colors.green,
+        title: Text(
+          'Edit Profil',
+          style: GoogleFonts.poppins(
+            color: Colors.white, // ⬅️ Warna teks putih
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),

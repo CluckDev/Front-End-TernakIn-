@@ -119,12 +119,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 const SizedBox(height: 16),
                 Text('Masukkan email kamu untuk menerima link reset password.',
                     style:
-                        GoogleFonts.poppins(fontSize: 16, color: Colors.black),
+                        GoogleFonts.poppins(fontSize: 16, color: Colors.white),
                     textAlign: TextAlign.center),
                 const SizedBox(height: 24),
                 // Gunakan TextFormField untuk validasi
                 TextFormField(
-                  style: GoogleFonts.poppins(fontSize: 16, color: Colors.black),
+                  style: GoogleFonts.poppins(fontSize: 16, color: Colors.white),
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
                   decoration: InputDecoration(

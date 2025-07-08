@@ -66,11 +66,25 @@ class _TambahJadwalScreenState extends State<TambahJadwalScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.editJadwal != null ? 'Edit Jadwal' : 'Tambah Jadwal'),
+       appBar: AppBar(
+        title: const Text(
+          'Jadwal Kegiatan',
+          style: TextStyle(
+            color: Colors.white, // Ubah warna teks jadi putih
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         backgroundColor: Colors.green[700],
         elevation: 2,
-      ),
+        actions: [ // ...
+          ],
+                  leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
+        ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
         child: Card(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class PengaturanScreen extends StatelessWidget {
   const PengaturanScreen({super.key});
@@ -6,9 +7,22 @@ class PengaturanScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Pengaturan'),
-        backgroundColor: Colors.green[700],
+           appBar: AppBar(
+        backgroundColor: Colors.green,
+        title: Text(
+          'Pengaturan',
+          style: GoogleFonts.poppins(
+            color: Colors.white, // ⬅️ Warna teks putih
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
       ),
       body: ListView(
         children: [
@@ -146,9 +160,22 @@ class _GantiPasswordScreenState extends State<GantiPasswordScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Ganti Password'),
-        backgroundColor: Colors.green[700],
+            appBar: AppBar(
+        backgroundColor: Colors.green,
+        title: Text(
+          'Ganti Password',
+          style: GoogleFonts.poppins(
+            color: Colors.white, // ⬅️ Warna teks putih
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(24),
