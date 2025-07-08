@@ -1,29 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'tambah_data_screen.dart';
+import 'package:intl/intl.dart';
+String formattedWaktu = DateFormat('d MMMM yyyy', 'id_ID')
+    .format(DateTime.tryParse(item.waktu) ?? now);
 
-// Dummy Data Telur
-List<RingkasanTelur> telurList = [
-  RingkasanTelur(jumlah: 2000, waktu: '08:00 - 20 April', ringkasan: 'Telur masuk 2000'),
-  RingkasanTelur(jumlah: 1500, waktu: '08:00 - 20 April', ringkasan: 'Telur keluar 1500'),
+// Model Telur
+class Telur {
+  int jumlah;
+  String waktu; // Format 'yyyy-MM-dd'
+  String status; // Masuk / Keluar
+
+  Telur({required this.jumlah, required this.waktu, required this.status});
+}
+
+List<Telur> telurList = [
+  Telur(jumlah: 2000, waktu: '2025-07-08', status: 'Masuk'),
+  Telur(jumlah: 1500, waktu: '2025-07-08', status: 'Keluar'),
 ];
-
-class RingkasanTelur {
-  final int jumlah;
-  final String waktu;
-  final String ringkasan;
-  RingkasanTelur({required this.jumlah, required this.waktu, required this.ringkasan});
-}
-
-RingkasanTelur getRingkasanTelur(String periode) {
-  if (periode == 'Harian') {
-    return RingkasanTelur(jumlah: 1500, waktu: '08:00 - 20 April', ringkasan: 'Telur masuk 2000');
-  } else if (periode == 'Mingguan') {
-    return RingkasanTelur(jumlah: 10500, waktu: 'Minggu ini', ringkasan: 'Telur masuk 14000');
-  } else {
-    return RingkasanTelur(jumlah: 45000, waktu: 'Bulan ini', ringkasan: 'Telur masuk 60000');
-  }
-}
 
 class ManajemenTelurScreen extends StatefulWidget {
   const ManajemenTelurScreen({super.key});
@@ -37,24 +31,54 @@ class _ManajemenTelurScreenState extends State<ManajemenTelurScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final telur = getRingkasanTelur(activePeriod);
-    final ringkasanList = [
-      _RingkasanData('Telur', Icons.egg, telur.jumlah, telur.waktu, telur.ringkasan),
-    ];
+    DateTime now = DateTime.now();
+
+    final ringkasanList = telurList.asMap().entries.where((entry) {
+      final item = entry.value;
+      DateTime waktuItem = DateTime.tryParse(item.waktu) ?? now;
+
+      if (activePeriod == 'Harian') {
+        return waktuItem.year == now.year &&
+            waktuItem.month == now.month &&
+            waktuItem.day == now.day;
+      } else if (activePeriod == 'Mingguan') {
+        DateTime awal = now.subtract(Duration(days: now.weekday - 1));
+        DateTime akhir = awal.add(const Duration(days: 6));
+        return waktuItem.isAfter(awal.subtract(const Duration(seconds: 1))) &&
+            waktuItem.isBefore(akhir.add(const Duration(days: 1)));
+      } else if (activePeriod == 'Bulanan') {
+        return waktuItem.year == now.year && waktuItem.month == now.month;
+      }
+      return true;
+    }).map((entry) {
+      final index = entry.key;
+      final item = entry.value;
+
+      return _RingkasanData(
+        'Telur',
+        Icons.egg,
+        item.jumlah,
+        item.waktu,
+        '${item.status} ${item.jumlah}',
+        index,
+      );
+    }).toList();
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Manajemen Telur'),
         backgroundColor: Colors.green,
-        titleTextStyle: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+        titleTextStyle: GoogleFonts.poppins(
+            fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
       ),
       body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Total Data Telur
+          // Total Telur
           Container(
             margin: const EdgeInsets.all(16),
             padding: const EdgeInsets.all(16),
@@ -84,8 +108,9 @@ class _ManajemenTelurScreenState extends State<ManajemenTelurScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('Total Telur',
-                        style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey[700])),
-                    Text('${telurList.length}',
+                        style: GoogleFonts.poppins(
+                            fontSize: 14, color: Colors.grey[700])),
+                    Text('${_hitungTotalTelur()}',
                         style: GoogleFonts.poppins(
                           fontWeight: FontWeight.bold,
                           fontSize: 20,
@@ -97,23 +122,24 @@ class _ManajemenTelurScreenState extends State<ManajemenTelurScreen> {
             ),
           ),
 
-          // Tab Filter
+          // Filter Tab
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: ['Harian', 'Mingguan', 'Bulanan'].map((label) => _tabFilter(label)).toList(),
+              children: ['Harian', 'Mingguan', 'Bulanan']
+                  .map((label) => _buildTab(label))
+                  .toList(),
             ),
           ),
 
           const SizedBox(height: 12),
 
-          // Ringkasan
+          // List Telur
           Expanded(
-            child: ListView.separated(
+            child: ListView.builder(
               padding: const EdgeInsets.all(16),
               itemCount: ringkasanList.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 8),
               itemBuilder: (context, index) {
                 final item = ringkasanList[index];
                 return _RingkasanItem(
@@ -122,6 +148,46 @@ class _ManajemenTelurScreenState extends State<ManajemenTelurScreen> {
                   jumlah: item.jumlah,
                   waktu: item.waktu,
                   ringkasan: item.ringkasan,
+                  onEdit: () async {
+                    final edited = await Navigator.push<Telur>(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => TambahDataScreen(
+                          jenisData: 'Telur',
+                          initialTelur: telurList[item.index],
+                        ),
+                      ),
+                    );
+
+                    if (edited != null) {
+                      setState(() {
+                        telurList[item.index] = edited;
+                      });
+                    }
+                  },
+                  onDelete: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text('Konfirmasi Hapus'),
+                        content: const Text('Yakin ingin menghapus data ini?'),
+                        actions: [
+                          TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: const Text('Batal')),
+                          TextButton(
+                              onPressed: () {
+                                setState(() {
+                                  telurList.removeAt(item.index);
+                                });
+                                Navigator.pop(context);
+                              },
+                              child: const Text('Hapus',
+                                  style: TextStyle(color: Colors.red))),
+                        ],
+                      ),
+                    );
+                  },
                 );
               },
             ),
@@ -129,23 +195,30 @@ class _ManajemenTelurScreenState extends State<ManajemenTelurScreen> {
         ],
       ),
 
+      // FAB tambah telur
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.green[700],
-        onPressed: () {
-          Navigator.push(
+        onPressed: () async {
+          final newTelur = await Navigator.push<Telur>(
             context,
             MaterialPageRoute(
               builder: (context) => const TambahDataScreen(jenisData: 'Telur'),
             ),
           );
+
+          if (newTelur != null) {
+            setState(() {
+              telurList.add(newTelur);
+            });
+          }
         },
         child: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }
 
-  Widget _tabFilter(String label) {
-    final bool isActive = activePeriod == label;
+  Widget _buildTab(String label) {
+    final isActive = activePeriod == label;
     return ElevatedButton(
       onPressed: () => setState(() => activePeriod = label),
       style: ElevatedButton.styleFrom(
@@ -156,25 +229,64 @@ class _ManajemenTelurScreenState extends State<ManajemenTelurScreen> {
       child: Text(label, style: GoogleFonts.poppins(color: Colors.white)),
     );
   }
+
+  int _hitungTotalTelur() {
+    int masuk = 0;
+    int keluar = 0;
+    DateTime now = DateTime.now();
+
+    for (var telur in telurList) {
+      DateTime waktu = DateTime.tryParse(telur.waktu) ?? now;
+
+      bool cocok = false;
+      if (activePeriod == 'Harian') {
+        cocok = waktu.year == now.year &&
+            waktu.month == now.month &&
+            waktu.day == now.day;
+      } else if (activePeriod == 'Mingguan') {
+        DateTime awal = now.subtract(Duration(days: now.weekday - 1));
+        DateTime akhir = awal.add(const Duration(days: 6));
+        cocok = waktu.isAfter(awal.subtract(const Duration(seconds: 1))) &&
+            waktu.isBefore(akhir.add(const Duration(days: 1)));
+      } else if (activePeriod == 'Bulanan') {
+        cocok = waktu.year == now.year && waktu.month == now.month;
+      }
+
+      if (cocok) {
+        if (telur.status == 'Masuk') {
+          masuk += telur.jumlah;
+        } else if (telur.status == 'Keluar') {
+          keluar += telur.jumlah;
+        }
+      }
+    }
+
+    return masuk - keluar;
+  }
 }
 
-// Model Ringkasan Internal
+// Model Ringkasan dengan Index
 class _RingkasanData {
   final String label;
   final IconData icon;
   final int jumlah;
   final String waktu;
   final String ringkasan;
-  _RingkasanData(this.label, this.icon, this.jumlah, this.waktu, this.ringkasan);
+  final int index;
+
+  _RingkasanData(
+      this.label, this.icon, this.jumlah, this.waktu, this.ringkasan, this.index);
 }
 
-// Komponen Ringkasan Telur
+// Widget Item Telur
 class _RingkasanItem extends StatelessWidget {
   final String label;
   final IconData icon;
   final int jumlah;
   final String waktu;
   final String ringkasan;
+  final VoidCallback? onEdit;
+  final VoidCallback? onDelete;
 
   const _RingkasanItem({
     required this.label,
@@ -182,19 +294,22 @@ class _RingkasanItem extends StatelessWidget {
     required this.jumlah,
     required this.waktu,
     required this.ringkasan,
+    this.onEdit,
+    this.onDelete,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
+      margin: const EdgeInsets.symmetric(vertical: 8),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.green.withAlpha(30),
-            blurRadius: 6,
+            color: Colors.green.withAlpha(20),
+            blurRadius: 8,
             offset: const Offset(0, 2),
           ),
         ],
@@ -202,52 +317,37 @@ class _RingkasanItem extends StatelessWidget {
       child: IntrinsicHeight(
         child: Row(
           children: [
-            // Kolom 1: Label dan Waktu
             Expanded(
-              flex: 2,
+              flex: 3,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(label, style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 14)),
+                  Text(label,
+                      style: GoogleFonts.poppins(
+                          fontWeight: FontWeight.bold, fontSize: 14)),
                   const SizedBox(height: 4),
-                  Text(waktu, style: GoogleFonts.poppins(fontSize: 13, color: Colors.grey[700])),
+                  Text(waktu,
+                      style: GoogleFonts.poppins(
+                          fontSize: 13, color: Colors.grey[700])),
                 ],
               ),
             ),
-
-            // Garis Vertikal
-            Container(width: 1, color: Colors.grey[300], margin: const EdgeInsets.symmetric(horizontal: 8)),
-
-            // Kolom 2: Masuk
             Expanded(
-              flex: 2,
-              child: Column(
-                children: [
-                  Text('Masuk', style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 14)),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${ringkasan.replaceAll(RegExp(r'Telur (masuk|keluar)', caseSensitive: false), '').trim()} butir',
-                    style: GoogleFonts.poppins(fontSize: 13),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
+              flex: 3,
+              child: Center(
+                child: Text(ringkasan,
+                    style: GoogleFonts.poppins(fontSize: 13)),
               ),
             ),
-
-            // Garis Vertikal
-            Container(width: 1, color: Colors.grey[300], margin: const EdgeInsets.symmetric(horizontal: 8)),
-
-            // Kolom 3: Jumlah
-            Expanded(
-              flex: 2,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text('Jumlah', style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 14)),
-                  const SizedBox(height: 4),
-                  Text('$jumlah butir', style: GoogleFonts.poppins(fontSize: 14)),
-                ],
-              ),
+            IconButton(
+              icon: const Icon(Icons.edit, color: Colors.blue),
+              onPressed: onEdit,
+              tooltip: 'Edit Data',
+            ),
+            IconButton(
+              icon: const Icon(Icons.delete, color: Colors.red),
+              onPressed: onDelete,
+              tooltip: 'Hapus Data',
             ),
           ],
         ),

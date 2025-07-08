@@ -8,28 +8,27 @@ import 'manajemen_telur.dart';
 import 'manajemen_pakan.dart';
 import 'manajemen_kesehatan.dart';
 
-// Hapus model dan fungsi RingkasanKesehatan yang lama
-// class RingkasanKesehatan {
-//   final int jumlah;
-//   final String waktu;
-//   final String ringkasan;
-//
-//   RingkasanKesehatan({
-//     required this.jumlah,
-//     required this.waktu,
-//     required this.ringkasan,
-//   });
-// }
-//
-// RingkasanKesehatan getRingkasanKesehatan(String periode) {
-//   if (periode == 'Harian') {
-//     return RingkasanKesehatan(jumlah: 2, waktu: 'Hari ini', ringkasan: 'Ayam sakit: 2');
-//   } else if (periode == 'Mingguan') {
-//     return RingkasanKesehatan(jumlah: 8, waktu: 'Minggu ini', ringkasan: 'Ayam sakit: 8');
-//   } else {
-//     return RingkasanKesehatan(jumlah: 20, waktu: 'Bulan ini', ringkasan: 'Ayam sakit: 20');
-//   }
-// }
+class RingkasanKesehatan {
+  final int jumlah;
+  final String waktu;
+  final String ringkasan;
+
+  RingkasanKesehatan({
+    required this.jumlah,
+    required this.waktu,
+    required this.ringkasan,
+  });
+}
+
+RingkasanKesehatan getRingkasanKesehatan(String periode) {
+  if (periode == 'Harian') {
+    return RingkasanKesehatan(jumlah: 2, waktu: 'Hari ini', ringkasan: 'Ayam sakit: 2');
+  } else if (periode == 'Mingguan') {
+    return RingkasanKesehatan(jumlah: 8, waktu: 'Minggu ini', ringkasan: 'Ayam sakit: 8');
+  } else {
+    return RingkasanKesehatan(jumlah: 20, waktu: 'Bulan ini', ringkasan: 'Ayam sakit: 20');
+  }
+}
 
 class ManajemenScreen extends StatefulWidget {
   const ManajemenScreen({super.key});
@@ -107,6 +106,11 @@ class _ManajemenScreenState extends State<ManajemenScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final ayam = getRingkasanAyam(activePeriod);
+    final telur = getRingkasanTelur(activePeriod);
+    final pakan = getRingkasanPakan(activePeriod);
+    final kesehatan = getRingkasanKesehatan(activePeriod);
+
     final ringkasanList = [
       _RingkasanData(
         'Ayam',
@@ -323,7 +327,7 @@ class _RingkasanItem extends StatelessWidget {
     String jumlahText = label == 'Pakan' ? '$jumlah kg' : '$jumlah';
 
     return MouseRegion(
-      cursor: SystemMouseCursors.basic, // 🔧 agar kursor tidak berubah
+      cursor: SystemMouseCursors.basic,
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,

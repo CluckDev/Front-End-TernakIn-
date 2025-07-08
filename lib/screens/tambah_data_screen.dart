@@ -1,23 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'manajemen_ayam.dart';
+import 'manajemen_telur.dart';
 
 // LIST DATA GLOBAL
-// Ini adalah daftar global untuk menyimpan data yang ditambahkan.
 List<Map<String, dynamic>> ayamList = [];
 List<Map<String, dynamic>> kesehatanList = [];
 List<Map<String, dynamic>> pakanList = [];
 List<Map<String, dynamic>> telurList = [];
 
 class TambahDataScreen extends StatefulWidget {
-  final String jenisData; // Properti untuk menentukan jenis data (Ayam, Telur, Pakan, Kesehatan)
-  final Map<String, dynamic>? initialData; // Data awal jika dalam mode update
-  final int? itemIndex; // Indeks item yang akan diupdate dalam list global
+  final String jenisData;
+  final Map<String, dynamic>? initialData;
+  final int? itemIndex;
 
   const TambahDataScreen({
     super.key,
     required this.jenisData,
-    this.initialData, // Opsional, untuk mode update
-    this.itemIndex,   // Opsional, untuk mode update
+    this.initialData,
+    this.itemIndex,
   });
 
   @override
@@ -25,29 +26,23 @@ class TambahDataScreen extends StatefulWidget {
 }
 
 class _TambahDataScreenState extends State<TambahDataScreen> {
-  // Controller untuk input jumlah
   final _jumlahController = TextEditingController();
-  // Controller untuk input keterangan/ringkasan/jenis penyakit
   final _keteranganController = TextEditingController();
-  // Variabel untuk menyimpan pilihan 'Masuk' atau 'Keluar'
   String? _masukKeluar;
 
   @override
   void initState() {
     super.initState();
-    // Inisialisasi nilai default untuk dropdown 'Masuk/Keluar'
     _masukKeluar = 'Masuk';
 
-    // Jika initialData disediakan, isi controller dan dropdown dengan data tersebut (mode update)
     if (widget.initialData != null) {
       _jumlahController.text = widget.initialData!['jumlah']?.toString() ?? '';
 
-      // Logika pengisian berdasarkan jenis data
       if (widget.jenisData == 'Kesehatan') {
         _keteranganController.text = widget.initialData!['kasus'] ?? '';
       } else if (widget.jenisData == 'Pakan') {
         _keteranganController.text = widget.initialData!['ringkasan'] ?? '';
-      } else { // Ayam atau Telur
+      } else {
         _masukKeluar = widget.initialData!['status'] ?? 'Masuk';
       }
     }
@@ -60,20 +55,14 @@ class _TambahDataScreenState extends State<TambahDataScreen> {
     super.dispose();
   }
 
-  // Fungsi untuk menyimpan atau memperbarui data
   void _simpanData() {
-    // Mengambil nilai jumlah dari input, jika tidak valid akan menjadi 0
     final jumlah = int.tryParse(_jumlahController.text.trim()) ?? 0;
-    // Mengambil nilai keterangan dari input
     final keterangan = _keteranganController.text.trim();
-    // Mendapatkan waktu saat ini
     final now = DateTime.now();
-    // Memformat waktu menjadi string yang mudah dibaca
-    final waktu = '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')} - ${now.day} ${_namaBulan(now.month)}';
+    final waktu =
+        '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')} - ${now.day} ${_namaBulan(now.month)}';
 
-    final jenis = widget.jenisData; // Mengambil jenis data dari widget
-
-    // Objek data baru atau yang diperbarui
+    final jenis = widget.jenisData;
     Map<String, dynamic> dataToSave;
 
     if (jenis == 'Kesehatan') {
@@ -88,7 +77,7 @@ class _TambahDataScreenState extends State<TambahDataScreen> {
         'ringkasan': keterangan,
         'waktu': waktu,
       };
-    } else { // Ayam atau Telur
+    } else {
       dataToSave = {
         'jumlah': jumlah,
         'status': _masukKeluar,
@@ -96,9 +85,7 @@ class _TambahDataScreenState extends State<TambahDataScreen> {
       };
     }
 
-    // Logika penyimpanan atau pembaruan data berdasarkan apakah itemIndex ada
     if (widget.itemIndex != null) {
-      // Mode update: Perbarui data yang ada di list global
       if (jenis == 'Kesehatan') {
         kesehatanList[widget.itemIndex!] = dataToSave;
       } else if (jenis == 'Pakan') {
@@ -109,7 +96,6 @@ class _TambahDataScreenState extends State<TambahDataScreen> {
         telurList[widget.itemIndex!] = dataToSave;
       }
     } else {
-      // Mode tambah: Tambahkan data baru ke list global
       if (jenis == 'Kesehatan') {
         kesehatanList.add(dataToSave);
       } else if (jenis == 'Pakan') {
@@ -121,44 +107,52 @@ class _TambahDataScreenState extends State<TambahDataScreen> {
       }
     }
 
-    // Kembali ke layar sebelumnya setelah data disimpan/diperbarui
     Navigator.pop(context);
   }
 
-  // Fungsi pembantu untuk mendapatkan nama bulan dalam Bahasa Indonesia
   String _namaBulan(int bulan) {
     const namaBulan = [
-      '', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+      '',
+      'Januari',
+      'Februari',
+      'Maret',
+      'April',
+      'Mei',
+      'Juni',
+      'Juli',
+      'Agustus',
+      'September',
+      'Oktober',
+      'November',
+      'Desember'
     ];
     return namaBulan[bulan];
   }
 
   @override
   Widget build(BuildContext context) {
-    final jenis = widget.jenisData; // Mengambil jenis data
-    // Menentukan judul AppBar secara dinamis berdasarkan jenis data dan mode (tambah/update)
-    final title = widget.initialData != null ? 'Edit Data $jenis' : 'Tambah Data $jenis';
+    final jenis = widget.jenisData;
+    final title = widget.initialData != null
+        ? 'Edit Data $jenis'
+        : 'Tambah Data $jenis';
 
-    // Menentukan label untuk input jumlah secara dinamis
     final labelJumlah = jenis == 'Kesehatan'
         ? 'Jumlah Ayam Sakit'
         : jenis == 'Pakan'
             ? 'Jumlah Pakan (kg)'
             : jenis == 'Telur'
                 ? 'Jumlah Telur'
-                : 'Jumlah Ayam'; // Default untuk Ayam
+                : 'Jumlah Ayam';
 
-    // Menentukan label untuk input keterangan secara dinamis
     final labelKeterangan = jenis == 'Kesehatan'
         ? 'Jenis Penyakit / Keterangan'
         : jenis == 'Pakan'
             ? 'Keterangan / Ringkasan'
-            : ''; // Kosong jika tidak diperlukan (Ayam/Telur)
+            : '';
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(title), // Judul AppBar yang dinamis
+        title: Text(title),
         backgroundColor: Colors.green[700],
         titleTextStyle: GoogleFonts.poppins(
           fontSize: 20,
@@ -170,30 +164,27 @@ class _TambahDataScreenState extends State<TambahDataScreen> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            // Icon yang berubah berdasarkan jenis data
             Icon(
               jenis == 'Ayam'
-                  ? Icons.add // Icon untuk Ayam
+                  ? Icons.add
                   : jenis == 'Telur'
-                      ? Icons.egg // Icon untuk Telur
+                      ? Icons.egg
                       : jenis == 'Pakan'
-                          ? Icons.rice_bowl // Icon untuk Pakan
-                          : Icons.health_and_safety, // Icon untuk Kesehatan
+                          ? Icons.rice_bowl
+                          : Icons.health_and_safety,
               color: Colors.green[700],
               size: 64,
             ),
             const SizedBox(height: 20),
-            // Input field untuk jumlah
             TextField(
               controller: _jumlahController,
-              keyboardType: TextInputType.number, // Hanya mengizinkan input angka
+              keyboardType: TextInputType.number,
               decoration: InputDecoration(
-                labelText: labelJumlah, // Label dinamis
-                border: OutlineInputBorder(),
+                labelText: labelJumlah,
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 16),
-            // Dropdown 'Masuk / Keluar' hanya untuk 'Ayam' dan 'Telur'
             if (jenis == 'Ayam' || jenis == 'Telur')
               DropdownButtonFormField<String>(
                 value: _masukKeluar,
@@ -205,7 +196,7 @@ class _TambahDataScreenState extends State<TambahDataScreen> {
                     .toList(),
                 onChanged: (value) {
                   setState(() {
-                    _masukKeluar = value; // Memperbarui nilai saat pilihan berubah
+                    _masukKeluar = value;
                   });
                 },
                 decoration: const InputDecoration(
@@ -213,41 +204,38 @@ class _TambahDataScreenState extends State<TambahDataScreen> {
                   border: OutlineInputBorder(),
                 ),
               ),
-            // Input field 'Keterangan' hanya untuk 'Kesehatan' dan 'Pakan'
             if (jenis == 'Kesehatan' || jenis == 'Pakan')
               Padding(
                 padding: const EdgeInsets.only(top: 16),
                 child: TextField(
                   controller: _keteranganController,
-                  maxLines: 3, // Mengizinkan input multi-baris
+                  maxLines: 3,
                   decoration: InputDecoration(
-                    labelText: labelKeterangan, // Label dinamis
-                    border: OutlineInputBorder(),
+                    labelText: labelKeterangan,
+                    border: const OutlineInputBorder(),
                   ),
                 ),
               ),
             const SizedBox(height: 16),
-            // Input field untuk waktu otomatis (tidak bisa diedit)
             TextField(
-              enabled: false, // Tidak bisa diedit
+              enabled: false,
               controller: TextEditingController(
-                text: // Menampilkan waktu saat ini secara otomatis
+                text:
                     '${DateTime.now().hour.toString().padLeft(2, '0')}:${DateTime.now().minute.toString().padLeft(2, '0')} - ${DateTime.now().day} ${_namaBulan(DateTime.now().month)}',
               ),
               decoration: InputDecoration(
                 labelText: 'Waktu Otomatis',
                 filled: true,
-                fillColor: Colors.grey[100], // Warna latar belakang abu-abu muda
-                border: OutlineInputBorder(),
+                fillColor: Colors.grey[100],
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 24),
-            // Tombol 'Simpan Data'
             ElevatedButton.icon(
-              onPressed: _simpanData, // Memanggil fungsi _simpanData saat ditekan
+              onPressed: _simpanData,
               icon: const Icon(Icons.save, color: Colors.white),
               label: Text(
-                widget.initialData != null ? 'Update Data' : 'Simpan Data', // Label tombol dinamis
+                widget.initialData != null ? 'Update Data' : 'Simpan Data',
                 style: GoogleFonts.poppins(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
