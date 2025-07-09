@@ -445,28 +445,6 @@ class _DashboardContentState extends State<DashboardContent> {
             ),
           ),
           const SizedBox(height: 24),
-          // Aktivitas terakhir (dummy)
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: basePadding), // Padding responsif
-            child: Text(
-              'Aktivitas Terakhir',
-              style: GoogleFonts.poppins(
-                  fontSize: 16, fontWeight: FontWeight.bold), // Ukuran font tetap
-            ),
-          ),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: basePadding, vertical: smallSpacing), // Padding responsif
-            child: Card(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              child: ListTile(
-                leading: Icon(Icons.add, color: Colors.green[700], size: screenWidth * 0.06), // Ukuran ikon responsif
-                title: Text('Tambah data ayam',
-                    style: GoogleFonts.poppins(fontSize: 14)), // Ukuran font tetap
-                subtitle: Text('Hari ini, 08:00',
-                    style: GoogleFonts.poppins(fontSize: 12)), // Ukuran font tetap
-              ),
-            ),
-          ),
           SizedBox(height: mediumSpacing), // Spasi responsif
         ],
       ),
