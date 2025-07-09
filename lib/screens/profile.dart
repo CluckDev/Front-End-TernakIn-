@@ -3,7 +3,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:ternakin/screens/dashboard.dart';
 import 'package:ternakin/services/auth_services.dart';
 import 'edit_profile_screen.dart';
-import 'statistik_screen.dart';
 import 'pengaturan_screen.dart';
 import 'notifikasi_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb_auth; // Alias untuk User Firebase
@@ -146,20 +145,6 @@ class _ProfilScreenState extends State<ProfilScreen> {
                 // Setelah kembali dari EditProfilScreen, muat ulang data profil
                 _loadUserProfile();
               });
-            },
-          ),
-          _profileMenu(
-            context,
-            icon: Icons.bar_chart,
-            label: 'Statistik',
-            color: Colors.green[400]!,
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const StatistikScreen(),
-                ),
-              );
             },
           ),
           _profileMenu(

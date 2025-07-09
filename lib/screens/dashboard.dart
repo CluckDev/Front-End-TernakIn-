@@ -11,7 +11,6 @@ import 'manajemen_kesehatan.dart';
 import 'manajemen_pakan.dart';
 import 'manajemen_telur.dart';
 import 'profile.dart';
-import 'statistik_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
 
 // Karena dataSummaryService sekarang diinisialisasi sebagai late final di main.dart,
@@ -286,6 +285,7 @@ class _DashboardContentState extends State<DashboardContent> {
                         .then((_) {
                       // Setelah kembali dari ProfilScreen, muat ulang data pengguna
                       // Ini akan memicu setState di DashboardScreen dan memperbarui DashboardContent
+                      // ignore: use_build_context_synchronously
                       final _DashboardScreenState? dashboardState = context.findAncestorStateOfType<_DashboardScreenState>();
                       dashboardState?._loadUserProfile(authService.currentUser); // Panggil dengan user saat ini
                     });
@@ -464,29 +464,6 @@ class _DashboardContentState extends State<DashboardContent> {
                     style: GoogleFonts.poppins(fontSize: 14)), // Ukuran font tetap
                 subtitle: Text('Hari ini, 08:00',
                     style: GoogleFonts.poppins(fontSize: 12)), // Ukuran font tetap
-              ),
-            ),
-          ),
-          // Tombol ke statistik detail
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: basePadding, vertical: mediumSpacing), // Padding responsif
-            child: ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green[700],
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                minimumSize: Size.fromHeight(screenWidth * 0.12), // Tinggi tombol responsif
-              ),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const StatistikScreen()),
-                );
-              },
-              icon: Icon(Icons.bar_chart, color: Colors.white, size: screenWidth * 0.06), // Ukuran ikon responsif
-              label: Text(
-                'Lihat Statistik Lengkap',
-                style: GoogleFonts.poppins(
-                    color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16), // Ukuran font tetap
               ),
             ),
           ),
